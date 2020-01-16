@@ -15,11 +15,10 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Http;
-using Microsoft.WindowsAzure.Storage;
 using System;
 using System.IO;
 using SqlServerRepos = Bit.Core.Repositories.SqlServer;
-using PostgreSqlRepos = Bit.Core.Repositories.PostgreSql;
+using EntityFrameworkRepos = Bit.Core.Repositories.EntityFramework;
 using NoopRepos = Bit.Core.Repositories.Noop;
 using System.Threading.Tasks;
 using TableStorageRepos = Bit.Core.Repositories.TableStorage;
@@ -32,6 +31,10 @@ using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using Bit.Core.Utilities;
 using Serilog.Context;
+using AutoMapper;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Azure.Storage;
 
 namespace Bit.Core.Utilities
 {
@@ -39,9 +42,22 @@ namespace Bit.Core.Utilities
     {
         public static void AddSqlServerRepositories(this IServiceCollection services, GlobalSettings globalSettings)
         {
-            if(!string.IsNullOrWhiteSpace(globalSettings.PostgreSql?.ConnectionString))
+            var usePostgreSql = !string.IsNullOrWhiteSpace(globalSettings.PostgreSql?.ConnectionString);
+            var useEf = usePostgreSql;
+
+            if(useEf)
             {
-                services.AddSingleton<IUserRepository, PostgreSqlRepos.UserRepository>();
+                services.AddAutoMapper(typeof(EntityFrameworkRepos.UserRepository));
+                services.AddDbContext<EntityFrameworkRepos.DatabaseContext>(options =>
+                {
+                    if(usePostgreSql)
+                    {
+                        options.UseNpgsql(globalSettings.PostgreSql.ConnectionString);
+                    }
+                });
+                services.AddSingleton<IUserRepository, EntityFrameworkRepos.UserRepository>();
+                //services.AddSingleton<ICipherRepository, EntityFrameworkRepos.CipherRepository>();
+                //services.AddSingleton<IOrganizationRepository, EntityFrameworkRepos.OrganizationRepository>();
             }
             else
             {
@@ -59,11 +75,19 @@ namespace Bit.Core.Utilities
                 services.AddSingleton<IInstallationRepository, SqlServerRepos.InstallationRepository>();
                 services.AddSingleton<IMaintenanceRepository, SqlServerRepos.MaintenanceRepository>();
                 services.AddSingleton<ITransactionRepository, SqlServerRepos.TransactionRepository>();
+                services.AddSingleton<IPolicyRepository, SqlServerRepos.PolicyRepository>();
             }
 
             if(globalSettings.SelfHosted)
             {
-                services.AddSingleton<IEventRepository, SqlServerRepos.EventRepository>();
+                if(useEf)
+                {
+                    // TODO
+                }
+                else
+                {
+                    services.AddSingleton<IEventRepository, SqlServerRepos.EventRepository>();
+                }
                 services.AddSingleton<IInstallationDeviceRepository, NoopRepos.InstallationDeviceRepository>();
                 services.AddSingleton<IMetaDataRepository, NoopRepos.MetaDataRepository>();
             }
@@ -82,6 +106,7 @@ namespace Bit.Core.Utilities
             services.AddScoped<IOrganizationService, OrganizationService>();
             services.AddScoped<ICollectionService, CollectionService>();
             services.AddScoped<IGroupService, GroupService>();
+            services.AddScoped<IPolicyService, PolicyService>();
             services.AddScoped<Services.IEventService, EventService>();
             services.AddSingleton<IDeviceService, DeviceService>();
             services.AddSingleton<IAppleIapService, AppleIapService>();
@@ -270,7 +295,7 @@ namespace Bit.Core.Utilities
                 options.AccessDeniedPath = "/login?accessDenied=true";
                 options.Cookie.Name = $"Bitwarden_{globalSettings.ProjectName}";
                 options.Cookie.HttpOnly = true;
-                options.Cookie.Expiration = options.ExpireTimeSpan = TimeSpan.FromDays(2);
+                options.ExpireTimeSpan = TimeSpan.FromDays(2);
                 options.ReturnUrlParameter = "returnUrl";
                 options.SlidingExpiration = true;
             });
@@ -279,7 +304,7 @@ namespace Bit.Core.Utilities
         }
 
         public static void AddIdentityAuthenticationServices(
-            this IServiceCollection services, GlobalSettings globalSettings, IHostingEnvironment environment,
+            this IServiceCollection services, GlobalSettings globalSettings, IWebHostEnvironment environment,
             Action<AuthorizationOptions> addAuthorization)
         {
             services
@@ -309,7 +334,7 @@ namespace Bit.Core.Utilities
         }
 
         public static IIdentityServerBuilder AddCustomIdentityServerServices(
-            this IServiceCollection services, IHostingEnvironment env, GlobalSettings globalSettings)
+            this IServiceCollection services, IWebHostEnvironment env, GlobalSettings globalSettings)
         {
             var issuerUri = new Uri(globalSettings.BaseServiceUri.InternalIdentity);
             var identityServerBuilder = services
@@ -369,7 +394,7 @@ namespace Bit.Core.Utilities
         }
 
         public static void AddCustomDataProtectionServices(
-            this IServiceCollection services, IHostingEnvironment env, GlobalSettings globalSettings)
+            this IServiceCollection services, IWebHostEnvironment env, GlobalSettings globalSettings)
         {
             if(env.IsDevelopment())
             {
@@ -413,7 +438,7 @@ namespace Bit.Core.Utilities
         }
 
         public static void UseDefaultMiddleware(this IApplicationBuilder app,
-            IHostingEnvironment env, GlobalSettings globalSettings)
+            IWebHostEnvironment env, GlobalSettings globalSettings)
         {
             string GetHeaderValue(HttpContext httpContext, string header)
             {

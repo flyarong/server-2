@@ -16,7 +16,8 @@ using System.Web;
 using Microsoft.AspNetCore.DataProtection;
 using Bit.Core.Enums;
 using System.Threading.Tasks;
-using Microsoft.WindowsAzure.Storage;
+using Microsoft.Azure.Storage;
+using Microsoft.Azure.Storage.Blob;
 
 namespace Bit.Core.Utilities
 {
@@ -168,13 +169,13 @@ namespace Bit.Core.Utilities
             return new X509Certificate2(file, password);
         }
 
-        public static X509Certificate2 GetEmbeddedCertificate(string file, string password)
+        public async static Task<X509Certificate2> GetEmbeddedCertificateAsync(string file, string password)
         {
             var assembly = typeof(CoreHelpers).GetTypeInfo().Assembly;
             using(var s = assembly.GetManifestResourceStream($"Bit.Core.{file}"))
             using(var ms = new MemoryStream())
             {
-                s.CopyTo(ms);
+                await s.CopyToAsync(ms);
                 return new X509Certificate2(ms.ToArray(), password);
             }
         }
