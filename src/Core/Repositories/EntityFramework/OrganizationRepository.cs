@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Bit.Core.Models.Table;
 
 namespace Bit.Core.Repositories.EntityFramework
 {
@@ -17,9 +18,20 @@ namespace Bit.Core.Repositories.EntityFramework
             : base(serviceScopeFactory, mapper, (DatabaseContext context) => context.Organizations)
         { }
 
+        public async Task<Organization> GetByIdentifierAsync(string identifier)
+        {
+            using (var scope = ServiceScopeFactory.CreateScope())
+            {
+                var dbContext = GetDatabaseContext(scope);
+                var organization = await GetDbSet(dbContext).Where(e => e.Identifier == identifier)
+                    .FirstOrDefaultAsync();
+                return organization;
+            }
+        }
+
         public async Task<ICollection<TableModel.Organization>> GetManyByEnabledAsync()
         {
-            using(var scope = ServiceScopeFactory.CreateScope())
+            using (var scope = ServiceScopeFactory.CreateScope())
             {
                 var dbContext = GetDatabaseContext(scope);
                 var organizations = await GetDbSet(dbContext).Where(e => e.Enabled).ToListAsync();
@@ -36,7 +48,7 @@ namespace Bit.Core.Repositories.EntityFramework
         public async Task<ICollection<TableModel.Organization>> SearchAsync(string name, string userEmail, bool? paid,
             int skip, int take)
         {
-            using(var scope = ServiceScopeFactory.CreateScope())
+            using (var scope = ServiceScopeFactory.CreateScope())
             {
                 var dbContext = GetDatabaseContext(scope);
                 // TODO: more filters
@@ -51,7 +63,7 @@ namespace Bit.Core.Repositories.EntityFramework
 
         public async Task UpdateStorageAsync(Guid id)
         {
-            using(var scope = ServiceScopeFactory.CreateScope())
+            using (var scope = ServiceScopeFactory.CreateScope())
             {
                 var dbContext = GetDatabaseContext(scope);
                 var ciphers = await dbContext.Ciphers
@@ -75,7 +87,7 @@ namespace Bit.Core.Repositories.EntityFramework
 
         public async Task<ICollection<DataModel.OrganizationAbility>> GetManyAbilitiesAsync()
         {
-            using(var scope = ServiceScopeFactory.CreateScope())
+            using (var scope = ServiceScopeFactory.CreateScope())
             {
                 var dbContext = GetDatabaseContext(scope);
                 return await GetDbSet(dbContext)
@@ -87,6 +99,7 @@ namespace Bit.Core.Repositories.EntityFramework
                     UseEvents = e.UseEvents,
                     UsersGetPremium = e.UsersGetPremium,
                     Using2fa = e.Use2fa && e.TwoFactorProviders != null,
+                    UseSso = e.UseSso,
                 }).ToListAsync();
             }
         }

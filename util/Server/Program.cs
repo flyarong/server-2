@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Hosting;
+﻿using System.IO;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
@@ -23,13 +24,17 @@ namespace Bit.Server
                 .ConfigureKestrel((context, options) => { });
 
             var contentRoot = config.GetValue<string>("contentRoot");
-            if(string.IsNullOrWhiteSpace(contentRoot))
+            if (!string.IsNullOrWhiteSpace(contentRoot))
             {
                 builder.UseContentRoot(contentRoot);
             }
+            else
+            {
+                builder.UseContentRoot(Directory.GetCurrentDirectory());
+            }
 
             var webRoot = config.GetValue<string>("webRoot");
-            if(string.IsNullOrWhiteSpace(webRoot))
+            if (string.IsNullOrWhiteSpace(webRoot))
             {
                 builder.UseWebRoot(webRoot);
             }

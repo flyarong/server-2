@@ -11,6 +11,7 @@ namespace Bit.Core.Models.Api
             Id = organization.OrganizationId.ToString();
             Name = organization.Name;
             UsePolicies = organization.UsePolicies;
+            UseSso = organization.UseSso;
             UseGroups = organization.UseGroups;
             UseDirectory = organization.UseDirectory;
             UseEvents = organization.UseEvents;
@@ -26,17 +27,21 @@ namespace Bit.Core.Models.Api
             Status = organization.Status;
             Type = organization.Type;
             Enabled = organization.Enabled;
+            SsoBound = !string.IsNullOrWhiteSpace(organization.SsoExternalId);
+            Identifier = organization.Identifier;
         }
 
         public string Id { get; set; }
         public string Name { get; set; }
         public bool UsePolicies { get; set; }
+        public bool UseSso { get; set; }
         public bool UseGroups { get; set; }
         public bool UseDirectory { get; set; }
         public bool UseEvents { get; set; }
         public bool UseTotp { get; set; }
         public bool Use2fa { get; set; }
         public bool UseApi { get; set; }
+        public bool UseBusinessPortal => UsePolicies || UseSso; // TODO add events if needed
         public bool UsersGetPremium { get; set; }
         public bool SelfHost { get; set; }
         public int Seats { get; set; }
@@ -46,5 +51,7 @@ namespace Bit.Core.Models.Api
         public OrganizationUserStatusType Status { get; set; }
         public OrganizationUserType Type { get; set; }
         public bool Enabled { get; set; }
+        public bool SsoBound { get; set; }
+        public string Identifier { get; set; }
     }
 }

@@ -29,9 +29,9 @@ namespace Bit.Billing.Jobs
             var timeZone = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ?
                    TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time") :
                    TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
-            if(_globalSettings.SelfHosted)
+            if (_globalSettings.SelfHosted)
             {
-                timeZone = TimeZoneInfo.Utc;
+                timeZone = TimeZoneInfo.Local;
             }
 
             var everyDayAtNinePmTrigger = TriggerBuilder.Create()

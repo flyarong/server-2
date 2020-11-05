@@ -23,9 +23,39 @@ BEGIN
         COMMIT TRANSACTION Organization_DeleteById_Ciphers
     END
 
+    BEGIN TRANSACTION Organization_DeleteById
+
+    DELETE
+    FROM
+        [dbo].[SsoUser]
+    WHERE
+        [OrganizationId] = @Id
+
+    DELETE
+    FROM
+        [dbo].[SsoConfig]
+    WHERE
+        [OrganizationId] = @Id
+
+    DELETE CU
+    FROM 
+        [dbo].[CollectionUser] CU
+    INNER JOIN 
+        [dbo].[OrganizationUser] OU ON [CU].[OrganizationUserId] = [OU].[Id]
+    WHERE 
+        [OU].[OrganizationId] = @Id
+
+    DELETE
+    FROM 
+        [dbo].[OrganizationUser]
+    WHERE 
+        [OrganizationId] = @Id
+
     DELETE
     FROM
         [dbo].[Organization]
     WHERE
         [Id] = @Id
+
+    COMMIT TRANSACTION Organization_DeleteById
 END

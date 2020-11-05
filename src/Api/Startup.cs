@@ -40,7 +40,7 @@ namespace Bit.Api
 
             // Settings
             var globalSettings = services.AddGlobalSettingsServices(Configuration);
-            if(!globalSettings.SelfHosted)
+            if (!globalSettings.SelfHosted)
             {
                 services.Configure<IpRateLimitOptions>(Configuration.GetSection("IpRateLimitOptions"));
                 services.Configure<IpRateLimitPolicies>(Configuration.GetSection("IpRateLimitPolicies"));
@@ -64,7 +64,7 @@ namespace Bit.Api
             // BitPay
             services.AddSingleton<BitPayClient>();
 
-            if(!globalSettings.SelfHosted)
+            if (!globalSettings.SelfHosted)
             {
                 // Rate limiting
                 services.AddSingleton<IIpPolicyStore, MemoryCacheIpPolicyStore>();
@@ -78,13 +78,13 @@ namespace Bit.Api
                 config.AddPolicy("Application", policy =>
                 {
                     policy.RequireAuthenticatedUser();
-                    policy.RequireClaim(JwtClaimTypes.AuthenticationMethod, "Application");
+                    policy.RequireClaim(JwtClaimTypes.AuthenticationMethod, "Application", "external");
                     policy.RequireClaim(JwtClaimTypes.Scope, "api");
                 });
                 config.AddPolicy("Web", policy =>
                 {
                     policy.RequireAuthenticatedUser();
-                    policy.RequireClaim(JwtClaimTypes.AuthenticationMethod, "Application");
+                    policy.RequireClaim(JwtClaimTypes.AuthenticationMethod, "Application", "external");
                     policy.RequireClaim(JwtClaimTypes.Scope, "api");
                     policy.RequireClaim(JwtClaimTypes.ClientId, "web");
                 });
@@ -110,6 +110,7 @@ namespace Bit.Api
             // Services
             services.AddBaseServices();
             services.AddDefaultServices(globalSettings);
+            services.AddCoreLocalizationServices();
 
             // MVC
             services.AddMvc(config =>
@@ -118,7 +119,7 @@ namespace Bit.Api
                 config.Conventions.Add(new PublicApiControllersModelConvention());
             }).AddNewtonsoftJson(options =>
             {
-                if(Environment.IsProduction() && Configuration["swaggerGen"] != "true")
+                if (Environment.IsProduction() && Configuration["swaggerGen"] != "true")
                 {
                     options.SerializerSettings.ContractResolver = new DefaultContractResolver();
                 }
@@ -126,13 +127,13 @@ namespace Bit.Api
 
             services.AddSwagger(globalSettings);
 
-            if(globalSettings.SelfHosted)
+            if (globalSettings.SelfHosted)
             {
                 // Jobs service
                 Jobs.JobsHostedService.AddJobsServices(services);
                 services.AddHostedService<Jobs.JobsHostedService>();
             }
-            if(CoreHelpers.SettingHasValue(globalSettings.ServiceBus.ConnectionString) &&
+            if (CoreHelpers.SettingHasValue(globalSettings.ServiceBus.ConnectionString) &&
                 CoreHelpers.SettingHasValue(globalSettings.ServiceBus.ApplicationCacheTopicName))
             {
                 services.AddHostedService<Core.HostedServices.ApplicationCacheHostedService>();
@@ -152,7 +153,7 @@ namespace Bit.Api
             // Default Middleware
             app.UseDefaultMiddleware(env, globalSettings);
 
-            if(!globalSettings.SelfHosted)
+            if (!globalSettings.SelfHosted)
             {
                 // Rate limiting
                 app.UseMiddleware<CustomIpRateLimitMiddleware>();
@@ -162,6 +163,9 @@ namespace Bit.Api
                 app.UseForwardedHeaders(globalSettings);
             }
 
+            // Add localization
+            app.UseCoreLocalization();
+
             // Add static files to the request pipeline.
             app.UseStaticFiles();
 
@@ -169,7 +173,7 @@ namespace Bit.Api
             app.UseRouting();
 
             // Add Cors
-            app.UseCors(policy => policy.SetIsOriginAllowed(h => true)
+            app.UseCors(policy => policy.SetIsOriginAllowed(o => CoreHelpers.IsCorsOriginAllowed(o, globalSettings))
                 .AllowAnyMethod().AllowAnyHeader().AllowCredentials());
 
             // Add authentication and authorization to the request pipeline.
@@ -183,17 +187,15 @@ namespace Bit.Api
             app.UseEndpoints(endpoints => endpoints.MapDefaultControllerRoute());
 
             // Add Swagger
-            if(Environment.IsDevelopment() || globalSettings.SelfHosted)
+            if (Environment.IsDevelopment() || globalSettings.SelfHosted)
             {
                 app.UseSwagger(config =>
                 {
                     config.RouteTemplate = "specs/{documentName}/swagger.json";
-                    var host = globalSettings.BaseServiceUri.Api.Replace("https://", string.Empty)
-                        .Replace("http://", string.Empty);
                     config.PreSerializeFilters.Add((swaggerDoc, httpReq) =>
                         swaggerDoc.Servers = new List<OpenApiServer>
                         {
-                            new OpenApiServer { Url = $"{httpReq.Scheme}://{host}" }
+                            new OpenApiServer { Url = globalSettings.BaseServiceUri.Api }
                         });
                 });
                 app.UseSwaggerUI(config =>

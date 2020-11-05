@@ -5,9 +5,6 @@ using Bit.Core.Models.Table;
 using Bit.Core.Repositories;
 using Bit.Core.Services;
 using IdentityModel;
-using IdentityServer4.Services;
-using IdentityServer4.Stores;
-using IdentityServer4.Validation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
@@ -35,6 +32,9 @@ using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Azure.Storage;
+using System.Reflection;
+using Bit.Core.Resources;
+using Microsoft.AspNetCore.Mvc.Localization;
 
 namespace Bit.Core.Utilities
 {
@@ -42,15 +42,15 @@ namespace Bit.Core.Utilities
     {
         public static void AddSqlServerRepositories(this IServiceCollection services, GlobalSettings globalSettings)
         {
-            var usePostgreSql = !string.IsNullOrWhiteSpace(globalSettings.PostgreSql?.ConnectionString);
+            var usePostgreSql = CoreHelpers.SettingHasValue(globalSettings.PostgreSql?.ConnectionString);
             var useEf = usePostgreSql;
 
-            if(useEf)
+            if (useEf)
             {
                 services.AddAutoMapper(typeof(EntityFrameworkRepos.UserRepository));
                 services.AddDbContext<EntityFrameworkRepos.DatabaseContext>(options =>
                 {
-                    if(usePostgreSql)
+                    if (usePostgreSql)
                     {
                         options.UseNpgsql(globalSettings.PostgreSql.ConnectionString);
                     }
@@ -76,11 +76,14 @@ namespace Bit.Core.Utilities
                 services.AddSingleton<IMaintenanceRepository, SqlServerRepos.MaintenanceRepository>();
                 services.AddSingleton<ITransactionRepository, SqlServerRepos.TransactionRepository>();
                 services.AddSingleton<IPolicyRepository, SqlServerRepos.PolicyRepository>();
+                services.AddSingleton<ISsoConfigRepository, SqlServerRepos.SsoConfigRepository>();
+                services.AddSingleton<ISsoUserRepository, SqlServerRepos.SsoUserRepository>();
+                services.AddSingleton<ISendRepository, SqlServerRepos.SendRepository>();
             }
 
-            if(globalSettings.SelfHosted)
+            if (globalSettings.SelfHosted)
             {
-                if(useEf)
+                if (useEf)
                 {
                     // TODO
                 }
@@ -110,6 +113,8 @@ namespace Bit.Core.Utilities
             services.AddScoped<Services.IEventService, EventService>();
             services.AddSingleton<IDeviceService, DeviceService>();
             services.AddSingleton<IAppleIapService, AppleIapService>();
+            services.AddSingleton<ISsoConfigService, SsoConfigService>();
+            services.AddScoped<ISendService, SendService>();
         }
 
         public static void AddDefaultServices(this IServiceCollection services, GlobalSettings globalSettings)
@@ -118,7 +123,7 @@ namespace Bit.Core.Utilities
             services.AddSingleton<IMailService, HandlebarsMailService>();
             services.AddSingleton<ILicensingService, LicensingService>();
 
-            if(CoreHelpers.SettingHasValue(globalSettings.ServiceBus.ConnectionString) &&
+            if (CoreHelpers.SettingHasValue(globalSettings.ServiceBus.ConnectionString) &&
                 CoreHelpers.SettingHasValue(globalSettings.ServiceBus.ApplicationCacheTopicName))
             {
                 services.AddSingleton<IApplicationCacheService, InMemoryServiceBusApplicationCacheService>();
@@ -128,15 +133,11 @@ namespace Bit.Core.Utilities
                 services.AddSingleton<IApplicationCacheService, InMemoryApplicationCacheService>();
             }
 
-            if(CoreHelpers.SettingHasValue(globalSettings.Mail.SendGridApiKey))
-            {
-                services.AddSingleton<IMailDeliveryService, SendGridMailDeliveryService>();
-            }
-            else if(CoreHelpers.SettingHasValue(globalSettings.Amazon?.AccessKeySecret))
+            if (CoreHelpers.SettingHasValue(globalSettings.Amazon?.AccessKeySecret))
             {
                 services.AddSingleton<IMailDeliveryService, AmazonSesMailDeliveryService>();
             }
-            else if(CoreHelpers.SettingHasValue(globalSettings.Mail?.Smtp?.Host))
+            else if (CoreHelpers.SettingHasValue(globalSettings.Mail?.Smtp?.Host))
             {
                 services.AddSingleton<IMailDeliveryService, MailKitSmtpMailDeliveryService>();
             }
@@ -146,14 +147,14 @@ namespace Bit.Core.Utilities
             }
 
             services.AddSingleton<IPushNotificationService, MultiServicePushNotificationService>();
-            if(globalSettings.SelfHosted &&
+            if (globalSettings.SelfHosted &&
                 CoreHelpers.SettingHasValue(globalSettings.PushRelayBaseUri) &&
                 globalSettings.Installation?.Id != null &&
                 CoreHelpers.SettingHasValue(globalSettings.Installation?.Key))
             {
                 services.AddSingleton<IPushRegistrationService, RelayPushRegistrationService>();
             }
-            else if(!globalSettings.SelfHosted)
+            else if (!globalSettings.SelfHosted)
             {
                 services.AddSingleton<IPushRegistrationService, NotificationHubPushRegistrationService>();
             }
@@ -162,11 +163,11 @@ namespace Bit.Core.Utilities
                 services.AddSingleton<IPushRegistrationService, NoopPushRegistrationService>();
             }
 
-            if(!globalSettings.SelfHosted && CoreHelpers.SettingHasValue(globalSettings.Storage?.ConnectionString))
+            if (!globalSettings.SelfHosted && CoreHelpers.SettingHasValue(globalSettings.Storage?.ConnectionString))
             {
                 services.AddSingleton<IBlockIpService, AzureQueueBlockIpService>();
             }
-            else if(!globalSettings.SelfHosted && CoreHelpers.SettingHasValue(globalSettings.Amazon?.AccessKeySecret))
+            else if (!globalSettings.SelfHosted && CoreHelpers.SettingHasValue(globalSettings.Amazon?.AccessKeySecret))
             {
                 services.AddSingleton<IBlockIpService, AmazonSqsBlockIpService>();
             }
@@ -175,11 +176,11 @@ namespace Bit.Core.Utilities
                 services.AddSingleton<IBlockIpService, NoopBlockIpService>();
             }
 
-            if(!globalSettings.SelfHosted && CoreHelpers.SettingHasValue(globalSettings.Events.ConnectionString))
+            if (!globalSettings.SelfHosted && CoreHelpers.SettingHasValue(globalSettings.Events.ConnectionString))
             {
                 services.AddSingleton<IEventWriteService, AzureQueueEventWriteService>();
             }
-            else if(globalSettings.SelfHosted)
+            else if (globalSettings.SelfHosted)
             {
                 services.AddSingleton<IEventWriteService, RepositoryEventWriteService>();
             }
@@ -188,17 +189,39 @@ namespace Bit.Core.Utilities
                 services.AddSingleton<IEventWriteService, NoopEventWriteService>();
             }
 
-            if(CoreHelpers.SettingHasValue(globalSettings.Attachment.ConnectionString))
+            if (CoreHelpers.SettingHasValue(globalSettings.Attachment.ConnectionString))
             {
                 services.AddSingleton<IAttachmentStorageService, AzureAttachmentStorageService>();
             }
-            else if(CoreHelpers.SettingHasValue(globalSettings.Attachment.BaseDirectory))
+            else if (CoreHelpers.SettingHasValue(globalSettings.Attachment.BaseDirectory))
             {
                 services.AddSingleton<IAttachmentStorageService, LocalAttachmentStorageService>();
             }
             else
             {
                 services.AddSingleton<IAttachmentStorageService, NoopAttachmentStorageService>();
+            }
+
+            if (CoreHelpers.SettingHasValue(globalSettings.Send.ConnectionString))
+            {
+                services.AddSingleton<ISendFileStorageService, AzureSendFileStorageService>();
+            }
+            else if (CoreHelpers.SettingHasValue(globalSettings.Send.BaseDirectory))
+            {
+                services.AddSingleton<ISendFileStorageService, LocalSendStorageService>();
+            }
+            else
+            {
+                services.AddSingleton<ISendFileStorageService, NoopSendFileStorageService>();
+            }
+
+            if (globalSettings.SelfHosted)
+            {
+                services.AddSingleton<IReferenceEventService, NoopReferenceEventService>();
+            }
+            else
+            {
+                services.AddSingleton<IReferenceEventService, AzureQueueReferenceEventService>();
             }
         }
 
@@ -319,7 +342,7 @@ namespace Bit.Core.Utilities
                     options.SupportedTokens = SupportedTokens.Jwt;
                 });
 
-            if(addAuthorization != null)
+            if (addAuthorization != null)
             {
                 services.AddAuthorization(config =>
                 {
@@ -327,105 +350,64 @@ namespace Bit.Core.Utilities
                 });
             }
 
-            if(environment.IsDevelopment())
+            if (environment.IsDevelopment())
             {
                 Microsoft.IdentityModel.Logging.IdentityModelEventSource.ShowPII = true;
             }
         }
 
-        public static IIdentityServerBuilder AddCustomIdentityServerServices(
-            this IServiceCollection services, IWebHostEnvironment env, GlobalSettings globalSettings)
-        {
-            var issuerUri = new Uri(globalSettings.BaseServiceUri.InternalIdentity);
-            var identityServerBuilder = services
-                .AddIdentityServer(options =>
-                {
-                    options.Endpoints.EnableAuthorizeEndpoint = false;
-                    options.Endpoints.EnableIntrospectionEndpoint = false;
-                    options.Endpoints.EnableEndSessionEndpoint = false;
-                    options.Endpoints.EnableUserInfoEndpoint = false;
-                    options.Endpoints.EnableCheckSessionEndpoint = false;
-                    options.Endpoints.EnableTokenRevocationEndpoint = false;
-                    options.IssuerUri = $"{issuerUri.Scheme}://{issuerUri.Host}";
-                    options.Caching.ClientStoreExpiration = new TimeSpan(0, 5, 0);
-                })
-                .AddInMemoryCaching()
-                .AddInMemoryApiResources(ApiResources.GetApiResources())
-                .AddClientStoreCache<ClientStore>();
-
-            if(env.IsDevelopment())
-            {
-                identityServerBuilder.AddDeveloperSigningCredential(false);
-            }
-            else if(globalSettings.SelfHosted &&
-                !string.IsNullOrWhiteSpace(globalSettings.IdentityServer.CertificatePassword)
-                && File.Exists("identity.pfx"))
-            {
-                var identityServerCert = CoreHelpers.GetCertificate("identity.pfx",
-                    globalSettings.IdentityServer.CertificatePassword);
-                identityServerBuilder.AddSigningCredential(identityServerCert);
-            }
-            else if(!string.IsNullOrWhiteSpace(globalSettings.IdentityServer.CertificateThumbprint))
-            {
-                var identityServerCert = CoreHelpers.GetCertificate(globalSettings.IdentityServer.CertificateThumbprint);
-                identityServerBuilder.AddSigningCredential(identityServerCert);
-            }
-            else if(!globalSettings.SelfHosted &&
-                CoreHelpers.SettingHasValue(globalSettings.Storage?.ConnectionString) &&
-                CoreHelpers.SettingHasValue(globalSettings.IdentityServer.CertificatePassword))
-            {
-                var storageAccount = CloudStorageAccount.Parse(globalSettings.Storage.ConnectionString);
-                var identityServerCert = CoreHelpers.GetBlobCertificateAsync(storageAccount, "certificates",
-                    "identity.pfx", globalSettings.IdentityServer.CertificatePassword).GetAwaiter().GetResult();
-                identityServerBuilder.AddSigningCredential(identityServerCert);
-            }
-            else
-            {
-                throw new Exception("No identity certificate to use.");
-            }
-
-            services.AddTransient<ClientStore>();
-            services.AddTransient<ICorsPolicyService, AllowAllCorsPolicyService>();
-            services.AddScoped<IResourceOwnerPasswordValidator, ResourceOwnerPasswordValidator>();
-            services.AddScoped<IProfileService, ProfileService>();
-            services.AddSingleton<IPersistedGrantStore, PersistedGrantStore>();
-
-            return identityServerBuilder;
-        }
-
         public static void AddCustomDataProtectionServices(
             this IServiceCollection services, IWebHostEnvironment env, GlobalSettings globalSettings)
         {
-            if(env.IsDevelopment())
+            var builder = services.AddDataProtection().SetApplicationName("Bitwarden");
+            if (env.IsDevelopment())
             {
                 return;
             }
 
-            if(globalSettings.SelfHosted && CoreHelpers.SettingHasValue(globalSettings.DataProtection.Directory))
+            if (globalSettings.SelfHosted && CoreHelpers.SettingHasValue(globalSettings.DataProtection.Directory))
             {
-                services.AddDataProtection()
-                    .PersistKeysToFileSystem(new DirectoryInfo(globalSettings.DataProtection.Directory));
+                builder.PersistKeysToFileSystem(new DirectoryInfo(globalSettings.DataProtection.Directory));
             }
 
-            if(!globalSettings.SelfHosted && CoreHelpers.SettingHasValue(globalSettings.Storage?.ConnectionString))
+            if (!globalSettings.SelfHosted && CoreHelpers.SettingHasValue(globalSettings.Storage?.ConnectionString))
             {
                 var storageAccount = CloudStorageAccount.Parse(globalSettings.Storage.ConnectionString);
                 X509Certificate2 dataProtectionCert = null;
-                if(CoreHelpers.SettingHasValue(globalSettings.DataProtection.CertificateThumbprint))
+                if (CoreHelpers.SettingHasValue(globalSettings.DataProtection.CertificateThumbprint))
                 {
                     dataProtectionCert = CoreHelpers.GetCertificate(
                         globalSettings.DataProtection.CertificateThumbprint);
                 }
-                else if(CoreHelpers.SettingHasValue(globalSettings.DataProtection.CertificatePassword))
+                else if (CoreHelpers.SettingHasValue(globalSettings.DataProtection.CertificatePassword))
                 {
                     dataProtectionCert = CoreHelpers.GetBlobCertificateAsync(storageAccount, "certificates",
                         "dataprotection.pfx", globalSettings.DataProtection.CertificatePassword)
                         .GetAwaiter().GetResult();
                 }
-                services.AddDataProtection()
+                builder
                     .PersistKeysToAzureBlobStorage(storageAccount, "aspnet-dataprotection/keys.xml")
                     .ProtectKeysWithCertificate(dataProtectionCert);
             }
+        }
+
+        public static IIdentityServerBuilder AddIdentityServerCertificate(
+            this IIdentityServerBuilder identityServerBuilder, IWebHostEnvironment env, GlobalSettings globalSettings)
+        {
+            var certificate = CoreHelpers.GetIdentityServerCertificate(globalSettings);
+            if (certificate != null)
+            {
+                identityServerBuilder.AddSigningCredential(certificate);
+            }
+            else if (env.IsDevelopment())
+            {
+                identityServerBuilder.AddDeveloperSigningCredential(false);
+            }
+            else
+            {
+                throw new Exception("No identity certificate to use.");
+            }
+            return identityServerBuilder;
         }
 
         public static GlobalSettings AddGlobalSettingsServices(this IServiceCollection services,
@@ -442,7 +424,7 @@ namespace Bit.Core.Utilities
         {
             string GetHeaderValue(HttpContext httpContext, string header)
             {
-                if(httpContext.Request.Headers.ContainsKey(header))
+                if (httpContext.Request.Headers.ContainsKey(header))
                 {
                     return httpContext.Request.Headers[header];
                 }
@@ -452,10 +434,10 @@ namespace Bit.Core.Utilities
             // Add version information to response headers
             app.Use(async (httpContext, next) =>
             {
-                using(LogContext.PushProperty("IPAddress", httpContext.GetIpAddress(globalSettings)))
-                using(LogContext.PushProperty("UserAgent", GetHeaderValue(httpContext, "user-agent")))
-                using(LogContext.PushProperty("DeviceType", GetHeaderValue(httpContext, "device-type")))
-                using(LogContext.PushProperty("Origin", GetHeaderValue(httpContext, "origin")))
+                using (LogContext.PushProperty("IPAddress", httpContext.GetIpAddress(globalSettings)))
+                using (LogContext.PushProperty("UserAgent", GetHeaderValue(httpContext, "user-agent")))
+                using (LogContext.PushProperty("DeviceType", GetHeaderValue(httpContext, "device-type")))
+                using (LogContext.PushProperty("Origin", GetHeaderValue(httpContext, "origin")))
                 {
                     httpContext.Response.OnStarting((state) =>
                     {
@@ -473,22 +455,49 @@ namespace Bit.Core.Utilities
             {
                 ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
             };
-            if(!string.IsNullOrWhiteSpace(globalSettings.KnownProxies))
+            if (!string.IsNullOrWhiteSpace(globalSettings.KnownProxies))
             {
                 var proxies = globalSettings.KnownProxies.Split(',');
-                foreach(var proxy in proxies)
+                foreach (var proxy in proxies)
                 {
-                    if(System.Net.IPAddress.TryParse(proxy.Trim(), out var ip))
+                    if (System.Net.IPAddress.TryParse(proxy.Trim(), out var ip))
                     {
                         options.KnownProxies.Add(ip);
                     }
                 }
             }
-            if(options.KnownProxies.Count > 1)
+            if (options.KnownProxies.Count > 1)
             {
                 options.ForwardLimit = null;
             }
             app.UseForwardedHeaders(options);
+        }
+
+        public static void AddCoreLocalizationServices(this IServiceCollection services)
+        {
+            services.AddTransient<II18nService, I18nService>();
+            services.AddLocalization(options => options.ResourcesPath = "Resources");
+        }
+
+        public static IApplicationBuilder UseCoreLocalization(this IApplicationBuilder app)
+        {
+            var supportedCultures = new[] { "en" };
+            return app.UseRequestLocalization(options => options
+                .SetDefaultCulture(supportedCultures[0])
+                .AddSupportedCultures(supportedCultures)
+                .AddSupportedUICultures(supportedCultures));
+        }
+
+        public static IMvcBuilder AddViewAndDataAnnotationLocalization(this IMvcBuilder mvc)
+        {
+            mvc.Services.AddTransient<IViewLocalizer, I18nViewLocalizer>();
+            return mvc.AddViewLocalization(options => options.ResourcesPath = "Resources")
+                .AddDataAnnotationsLocalization(options => 
+                    options.DataAnnotationLocalizerProvider = (type, factory) =>
+                    {
+                        var assemblyName = new AssemblyName(typeof(SharedResources).GetTypeInfo().Assembly.FullName);
+                        return factory.Create("SharedResources", assemblyName.Name);
+                    });
         }
     }
 }

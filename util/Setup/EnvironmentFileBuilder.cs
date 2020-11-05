@@ -26,12 +26,16 @@ namespace Bit.Setup
                 ["globalSettings__baseServiceUri__api"] = "http://localhost/api",
                 ["globalSettings__baseServiceUri__identity"] = "http://localhost/identity",
                 ["globalSettings__baseServiceUri__admin"] = "http://localhost/admin",
+                ["globalSettings__baseServiceUri__sso"] = "http://localhost/sso",
+                ["globalSettings__baseServiceUri__portal"] = "http://localhost/portal",
                 ["globalSettings__baseServiceUri__notifications"] = "http://localhost/notifications",
                 ["globalSettings__baseServiceUri__internalNotifications"] = "http://notifications:5000",
                 ["globalSettings__baseServiceUri__internalAdmin"] = "http://admin:5000",
                 ["globalSettings__baseServiceUri__internalIdentity"] = "http://identity:5000",
                 ["globalSettings__baseServiceUri__internalApi"] = "http://api:5000",
                 ["globalSettings__baseServiceUri__internalVault"] = "http://web:5000",
+                ["globalSettings__baseServiceUri__internalSso"] = "http://sso:5000",
+                ["globalSettings__baseServiceUri__internalPortal"] = "http://portal:5000",
                 ["globalSettings__pushRelayBaseUri"] = "https://push.bitwarden.com",
                 ["globalSettings__installation__identityUri"] = "https://identity.bitwarden.com",
             };
@@ -56,7 +60,7 @@ namespace Bit.Setup
             LoadExistingValues(_globalOverrideValues, "/bitwarden/env/global.override.env");
             LoadExistingValues(_mssqlOverrideValues, "/bitwarden/env/mssql.override.env");
 
-            if(_context.Config.PushNotifications &&
+            if (_context.Config.PushNotifications &&
                 _globalOverrideValues.ContainsKey("globalSettings__pushRelayBaseUri") &&
                 _globalOverrideValues["globalSettings__pushRelayBaseUri"] == "REPLACE")
             {
@@ -89,14 +93,22 @@ namespace Bit.Setup
                 ["globalSettings__baseServiceUri__identity"] = $"{_context.Config.Url}/identity",
                 ["globalSettings__baseServiceUri__admin"] = $"{_context.Config.Url}/admin",
                 ["globalSettings__baseServiceUri__notifications"] = $"{_context.Config.Url}/notifications",
+                ["globalSettings__baseServiceUri__sso"] = $"{_context.Config.Url}/sso",
+                ["globalSettings__baseServiceUri__portal"] = $"{_context.Config.Url}/portal",
                 ["globalSettings__sqlServer__connectionString"] = $"\"{dbConnectionString}\"",
                 ["globalSettings__identityServer__certificatePassword"] = _context.Install?.IdentityCertPassword,
                 ["globalSettings__attachment__baseDirectory"] = $"{_context.OutputDir}/core/attachments",
                 ["globalSettings__attachment__baseUrl"] = $"{_context.Config.Url}/attachments",
+                ["globalSettings__send__baseDirectory"] = $"{_context.OutputDir}/core/attachments/send",
+                ["globalSettings__send__baseUrl"] = $"{_context.Config.Url}/attachments/send",
                 ["globalSettings__dataProtection__directory"] = $"{_context.OutputDir}/core/aspnet-dataprotection",
                 ["globalSettings__logDirectory"] = $"{_context.OutputDir}/logs",
+                ["globalSettings__logRollBySizeLimit"] = string.Empty,
+                ["globalSettings__syslog__destination"] = string.Empty,
                 ["globalSettings__licenseDirectory"] = $"{_context.OutputDir}/core/licenses",
                 ["globalSettings__internalIdentityKey"] = _context.Stub ? "RANDOM_IDENTITY_KEY" :
+                    Helpers.SecureRandomString(64, alpha: true, numeric: true),
+                ["globalSettings__oidcIdentityClientKey"] = _context.Stub ? "RANDOM_IDENTITY_KEY" :
                     Helpers.SecureRandomString(64, alpha: true, numeric: true),
                 ["globalSettings__duo__aKey"] = _context.Stub ? "RANDOM_DUO_AKEY" :
                     Helpers.SecureRandomString(64, alpha: true, numeric: true),
@@ -115,7 +127,7 @@ namespace Bit.Setup
                 ["adminSettings__admins"] = string.Empty,
             };
 
-            if(!_context.Config.PushNotifications)
+            if (!_context.Config.PushNotifications)
             {
                 _globalOverrideValues.Add("globalSettings__pushRelayBaseUri", "REPLACE");
             }
@@ -130,32 +142,32 @@ namespace Bit.Setup
 
         private void LoadExistingValues(IDictionary<string, string> _values, string file)
         {
-            if(!File.Exists(file))
+            if (!File.Exists(file))
             {
                 return;
             }
 
             var fileLines = File.ReadAllLines(file);
-            foreach(var line in fileLines)
+            foreach (var line in fileLines)
             {
-                if(!line.Contains("="))
+                if (!line.Contains("="))
                 {
                     continue;
                 }
 
                 var value = string.Empty;
                 var lineParts = line.Split("=", 2);
-                if(lineParts.Length < 1)
+                if (lineParts.Length < 1)
                 {
                     continue;
                 }
 
-                if(lineParts.Length > 1)
+                if (lineParts.Length > 1)
                 {
                     value = lineParts[1];
                 }
 
-                if(_values.ContainsKey(lineParts[0]))
+                if (_values.ContainsKey(lineParts[0]))
                 {
                     _values[lineParts[0]] = value;
                 }
@@ -172,13 +184,13 @@ namespace Bit.Setup
 
             Helpers.WriteLine(_context, "Building docker environment files.");
             Directory.CreateDirectory("/bitwarden/docker/");
-            using(var sw = File.CreateText("/bitwarden/docker/global.env"))
+            using (var sw = File.CreateText("/bitwarden/docker/global.env"))
             {
                 sw.Write(template(new TemplateModel(_globalValues)));
             }
             Helpers.Exec("chmod 600 /bitwarden/docker/global.env");
 
-            using(var sw = File.CreateText("/bitwarden/docker/mssql.env"))
+            using (var sw = File.CreateText("/bitwarden/docker/mssql.env"))
             {
                 sw.Write(template(new TemplateModel(_mssqlValues)));
             }
@@ -186,22 +198,22 @@ namespace Bit.Setup
 
             Helpers.WriteLine(_context, "Building docker environment override files.");
             Directory.CreateDirectory("/bitwarden/env/");
-            using(var sw = File.CreateText("/bitwarden/env/global.override.env"))
+            using (var sw = File.CreateText("/bitwarden/env/global.override.env"))
             {
                 sw.Write(template(new TemplateModel(_globalOverrideValues)));
             }
             Helpers.Exec("chmod 600 /bitwarden/env/global.override.env");
 
-            using(var sw = File.CreateText("/bitwarden/env/mssql.override.env"))
+            using (var sw = File.CreateText("/bitwarden/env/mssql.override.env"))
             {
                 sw.Write(template(new TemplateModel(_mssqlOverrideValues)));
             }
             Helpers.Exec("chmod 600 /bitwarden/env/mssql.override.env");
 
             // Empty uid env file. Only used on Linux hosts.
-            if(!File.Exists("/bitwarden/env/uid.env"))
+            if (!File.Exists("/bitwarden/env/uid.env"))
             {
-                using(var sw = File.CreateText("/bitwarden/env/uid.env")) { }
+                using (var sw = File.CreateText("/bitwarden/env/uid.env")) { }
             }
         }
 

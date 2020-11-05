@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
+using Bit.Core.Models.Table;
 
 namespace Bit.Core.Repositories.EntityFramework
 {
@@ -19,7 +20,7 @@ namespace Bit.Core.Repositories.EntityFramework
 
         public async Task<TableModel.User> GetByEmailAsync(string email)
         {
-            using(var scope = ServiceScopeFactory.CreateScope())
+            using (var scope = ServiceScopeFactory.CreateScope())
             {
                 var dbContext = GetDatabaseContext(scope);
                 return await GetDbSet(dbContext).FirstOrDefaultAsync(e => e.Email == email);
@@ -28,7 +29,7 @@ namespace Bit.Core.Repositories.EntityFramework
 
         public async Task<DataModel.UserKdfInformation> GetKdfInformationByEmailAsync(string email)
         {
-            using(var scope = ServiceScopeFactory.CreateScope())
+            using (var scope = ServiceScopeFactory.CreateScope())
             {
                 var dbContext = GetDatabaseContext(scope);
                 return await GetDbSet(dbContext).Where(e => e.Email == email)
@@ -42,7 +43,7 @@ namespace Bit.Core.Repositories.EntityFramework
 
         public async Task<ICollection<TableModel.User>> SearchAsync(string email, int skip, int take)
         {
-            using(var scope = ServiceScopeFactory.CreateScope())
+            using (var scope = ServiceScopeFactory.CreateScope())
             {
                 var dbContext = GetDatabaseContext(scope);
                 var users = await GetDbSet(dbContext)
@@ -56,7 +57,7 @@ namespace Bit.Core.Repositories.EntityFramework
 
         public async Task<ICollection<TableModel.User>> GetManyByPremiumAsync(bool premium)
         {
-            using(var scope = ServiceScopeFactory.CreateScope())
+            using (var scope = ServiceScopeFactory.CreateScope())
             {
                 var dbContext = GetDatabaseContext(scope);
                 var users = await GetDbSet(dbContext).Where(e => e.Premium == premium).ToListAsync();
@@ -66,7 +67,7 @@ namespace Bit.Core.Repositories.EntityFramework
 
         public async Task<string> GetPublicKeyAsync(Guid id)
         {
-            using(var scope = ServiceScopeFactory.CreateScope())
+            using (var scope = ServiceScopeFactory.CreateScope())
             {
                 var dbContext = GetDatabaseContext(scope);
                 return await GetDbSet(dbContext).Where(e => e.Id == id).Select(e => e.PublicKey).SingleOrDefaultAsync();
@@ -75,7 +76,7 @@ namespace Bit.Core.Repositories.EntityFramework
 
         public async Task<DateTime> GetAccountRevisionDateAsync(Guid id)
         {
-            using(var scope = ServiceScopeFactory.CreateScope())
+            using (var scope = ServiceScopeFactory.CreateScope())
             {
                 var dbContext = GetDatabaseContext(scope);
                 return await GetDbSet(dbContext).Where(e => e.Id == id).Select(e => e.AccountRevisionDate)
@@ -85,7 +86,7 @@ namespace Bit.Core.Repositories.EntityFramework
 
         public async Task UpdateStorageAsync(Guid id)
         {
-            using(var scope = ServiceScopeFactory.CreateScope())
+            using (var scope = ServiceScopeFactory.CreateScope())
             {
                 var dbContext = GetDatabaseContext(scope);
                 var ciphers = await dbContext.Ciphers.Where(e => e.UserId == id).ToListAsync();
@@ -108,7 +109,7 @@ namespace Bit.Core.Repositories.EntityFramework
 
         public async Task UpdateRenewalReminderDateAsync(Guid id, DateTime renewalReminderDate)
         {
-            using(var scope = ServiceScopeFactory.CreateScope())
+            using (var scope = ServiceScopeFactory.CreateScope())
             {
                 var dbContext = GetDatabaseContext(scope);
                 var user = new EFModel.User
@@ -121,6 +122,11 @@ namespace Bit.Core.Repositories.EntityFramework
                 dbContext.Entry(user).Property(e => e.RenewalReminderDate).IsModified = true;
                 await dbContext.SaveChangesAsync();
             }
+        }
+
+        public Task<User> GetBySsoUserAsync(string externalId, Guid? organizationId)
+        {
+            throw new NotImplementedException();
         }
     }
 }

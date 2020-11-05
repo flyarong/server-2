@@ -24,6 +24,7 @@ namespace Bit.Core.Services
         private readonly IUserRepository _userRepository;
         private readonly IOrganizationRepository _organizationRepository;
         private readonly IOrganizationUserRepository _organizationUserRepository;
+        private readonly IMailService _mailService;
         private readonly ILogger<LicensingService> _logger;
 
         private IDictionary<Guid, DateTime> _userCheckCache = new Dictionary<Guid, DateTime>();
@@ -32,6 +33,7 @@ namespace Bit.Core.Services
             IUserRepository userRepository,
             IOrganizationRepository organizationRepository,
             IOrganizationUserRepository organizationUserRepository,
+            IMailService mailService,
             IWebHostEnvironment environment,
             ILogger<LicensingService> logger,
             GlobalSettings globalSettings)
@@ -39,17 +41,18 @@ namespace Bit.Core.Services
             _userRepository = userRepository;
             _organizationRepository = organizationRepository;
             _organizationUserRepository = organizationUserRepository;
+            _mailService = mailService;
             _logger = logger;
             _globalSettings = globalSettings;
 
             var certThumbprint = environment.IsDevelopment() ? "207E64A231E8AA32AAF68A61037C075EBEBD553F" :
                 "‎B34876439FCDA2846505B2EFBBA6C4A951313EBE";
-            if(_globalSettings.SelfHosted)
+            if (_globalSettings.SelfHosted)
             {
                 _certificate = CoreHelpers.GetEmbeddedCertificateAsync("licensing.cer", null)
                     .GetAwaiter().GetResult();
             }
-            else if(CoreHelpers.SettingHasValue(_globalSettings.Storage?.ConnectionString) &&
+            else if (CoreHelpers.SettingHasValue(_globalSettings.Storage?.ConnectionString) &&
                 CoreHelpers.SettingHasValue(_globalSettings.LicenseCertificatePassword))
             {
                 var storageAccount = CloudStorageAccount.Parse(globalSettings.Storage.ConnectionString);
@@ -62,13 +65,13 @@ namespace Bit.Core.Services
                 _certificate = CoreHelpers.GetCertificate(certThumbprint);
             }
 
-            if(_certificate == null || !_certificate.Thumbprint.Equals(CoreHelpers.CleanCertificateThumbprint(certThumbprint),
+            if (_certificate == null || !_certificate.Thumbprint.Equals(CoreHelpers.CleanCertificateThumbprint(certThumbprint),
                 StringComparison.InvariantCultureIgnoreCase))
             {
                 throw new Exception("Invalid licensing certificate.");
             }
 
-            if(_globalSettings.SelfHosted && !CoreHelpers.SettingHasValue(_globalSettings.LicenseDirectory))
+            if (_globalSettings.SelfHosted && !CoreHelpers.SettingHasValue(_globalSettings.LicenseDirectory))
             {
                 throw new InvalidOperationException("No license directory.");
             }
@@ -76,7 +79,7 @@ namespace Bit.Core.Services
 
         public async Task ValidateOrganizationsAsync()
         {
-            if(!_globalSettings.SelfHosted)
+            if (!_globalSettings.SelfHosted)
             {
                 return;
             }
@@ -85,29 +88,29 @@ namespace Bit.Core.Services
             _logger.LogInformation(Constants.BypassFiltersEventId, null,
                 "Validating licenses for {0} organizations.", enabledOrgs.Count);
 
-            foreach(var org in enabledOrgs)
+            foreach (var org in enabledOrgs)
             {
                 var license = ReadOrganizationLicense(org);
-                if(license == null)
+                if (license == null)
                 {
                     await DisableOrganizationAsync(org, null, "No license file.");
                     continue;
                 }
 
                 var totalLicensedOrgs = enabledOrgs.Count(o => o.LicenseKey.Equals(license.LicenseKey));
-                if(totalLicensedOrgs > 1)
+                if (totalLicensedOrgs > 1)
                 {
                     await DisableOrganizationAsync(org, license, "Multiple organizations.");
                     continue;
                 }
 
-                if(!license.VerifyData(org, _globalSettings))
+                if (!license.VerifyData(org, _globalSettings))
                 {
                     await DisableOrganizationAsync(org, license, "Invalid data.");
                     continue;
                 }
 
-                if(!license.VerifySignature(_certificate))
+                if (!license.VerifySignature(_certificate))
                 {
                     await DisableOrganizationAsync(org, license, "Invalid signature.");
                     continue;
@@ -124,11 +127,13 @@ namespace Bit.Core.Services
             org.ExpirationDate = license?.Expires ?? DateTime.UtcNow;
             org.RevisionDate = DateTime.UtcNow;
             await _organizationRepository.ReplaceAsync(org);
+
+            await _mailService.SendLicenseExpiredAsync(new List<string> { org.BillingEmail }, org.Name);
         }
 
         public async Task ValidateUsersAsync()
         {
-            if(!_globalSettings.SelfHosted)
+            if (!_globalSettings.SelfHosted)
             {
                 return;
             }
@@ -137,7 +142,7 @@ namespace Bit.Core.Services
             _logger.LogInformation(Constants.BypassFiltersEventId, null,
                 "Validating premium for {0} users.", premiumUsers.Count);
 
-            foreach(var user in premiumUsers)
+            foreach (var user in premiumUsers)
             {
                 await ProcessUserValidationAsync(user);
             }
@@ -145,22 +150,22 @@ namespace Bit.Core.Services
 
         public async Task<bool> ValidateUserPremiumAsync(User user)
         {
-            if(!_globalSettings.SelfHosted)
+            if (!_globalSettings.SelfHosted)
             {
                 return user.Premium;
             }
 
-            if(!user.Premium)
+            if (!user.Premium)
             {
                 return false;
             }
 
             // Only check once per day
             var now = DateTime.UtcNow;
-            if(_userCheckCache.ContainsKey(user.Id))
+            if (_userCheckCache.ContainsKey(user.Id))
             {
                 var lastCheck = _userCheckCache[user.Id];
-                if(lastCheck < now && now - lastCheck < TimeSpan.FromDays(1))
+                if (lastCheck < now && now - lastCheck < TimeSpan.FromDays(1))
                 {
                     return user.Premium;
                 }
@@ -182,19 +187,19 @@ namespace Bit.Core.Services
         private async Task<bool> ProcessUserValidationAsync(User user)
         {
             var license = ReadUserLicense(user);
-            if(license == null)
+            if (license == null)
             {
                 await DisablePremiumAsync(user, null, "No license file.");
                 return false;
             }
 
-            if(!license.VerifyData(user))
+            if (!license.VerifyData(user))
             {
                 await DisablePremiumAsync(user, license, "Invalid data.");
                 return false;
             }
 
-            if(!license.VerifySignature(_certificate))
+            if (!license.VerifySignature(_certificate))
             {
                 await DisablePremiumAsync(user, license, "Invalid signature.");
                 return false;
@@ -213,6 +218,8 @@ namespace Bit.Core.Services
             user.PremiumExpirationDate = license?.Expires ?? DateTime.UtcNow;
             user.RevisionDate = DateTime.UtcNow;
             await _userRepository.ReplaceAsync(user);
+
+            await _mailService.SendLicenseExpiredAsync(new List<string> { user.Email });
         }
 
         public bool VerifyLicense(ILicense license)
@@ -222,7 +229,7 @@ namespace Bit.Core.Services
 
         public byte[] SignLicense(ILicense license)
         {
-            if(_globalSettings.SelfHosted || !_certificate.HasPrivateKey)
+            if (_globalSettings.SelfHosted || !_certificate.HasPrivateKey)
             {
                 throw new InvalidOperationException("Cannot sign licenses.");
             }
@@ -233,7 +240,7 @@ namespace Bit.Core.Services
         private UserLicense ReadUserLicense(User user)
         {
             var filePath = $"{_globalSettings.LicenseDirectory}/user/{user.Id}.json";
-            if(!File.Exists(filePath))
+            if (!File.Exists(filePath))
             {
                 return null;
             }
@@ -245,7 +252,7 @@ namespace Bit.Core.Services
         private OrganizationLicense ReadOrganizationLicense(Organization organization)
         {
             var filePath = $"{_globalSettings.LicenseDirectory}/organization/{organization.Id}.json";
-            if(!File.Exists(filePath))
+            if (!File.Exists(filePath))
             {
                 return null;
             }

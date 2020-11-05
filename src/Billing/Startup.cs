@@ -65,6 +65,9 @@ namespace Bit.Billing
             });
             services.Configure<RouteOptions>(options => options.LowercaseUrls = true);
 
+            // Authentication
+            services.AddAuthentication();
+
             // Jobs service, uncomment when we have some jobs to run
             // Jobs.JobsHostedService.AddJobsServices(services);
             // services.AddHostedService<Jobs.JobsHostedService>();
@@ -78,7 +81,7 @@ namespace Bit.Billing
         {
             app.UseSerilog(env, appLifetime, globalSettings);
 
-            if(env.IsDevelopment())
+            if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
             }

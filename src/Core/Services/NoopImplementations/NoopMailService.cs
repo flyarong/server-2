@@ -47,6 +47,11 @@ namespace Bit.Core.Services
             return Task.FromResult(0);
         }
 
+        public Task SendOrganizationUserRemovedForPolicyTwoStepEmailAsync(string organizationName, string email)
+        {
+            return Task.FromResult(0);
+        }
+
         public Task SendTwoFactorEmailAsync(string email, string token)
         {
             return Task.FromResult(0);
@@ -83,12 +88,22 @@ namespace Bit.Core.Services
             return Task.FromResult(0);
         }
 
+        public Task SendLicenseExpiredAsync(IEnumerable<string> emails, string organizationName = null)
+        {
+            return Task.FromResult(0);
+        }
+
         public Task SendNewDeviceLoggedInEmail(string email, string deviceType, DateTime timestamp, string ip)
         {
             return Task.FromResult(0);
         }
 
         public Task SendRecoverTwoFactorEmail(string email, DateTime timestamp, string ip)
+        {
+            return Task.FromResult(0);
+        }
+
+        public Task SendOrganizationUserRemovedForPolicySingleOrgEmailAsync(string organizationName, string email)
         {
             return Task.FromResult(0);
         }

@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using Bit.Core.Enums;
+using Bit.Core.Models.Business;
 using Bit.Core.Models.Table;
+using Newtonsoft.Json;
 
 namespace Bit.Core.Models.Api
 {
@@ -25,6 +27,7 @@ namespace Bit.Core.Models.Api
         public Guid? OrganizationUserId { get; set; }
         public KdfType? Kdf { get; set; }
         public int? KdfIterations { get; set; }
+        public Dictionary<string, object> ReferenceData { get; set; }
 
         public User ToUser()
         {
@@ -34,15 +37,20 @@ namespace Bit.Core.Models.Api
                 Email = Email,
                 MasterPasswordHint = MasterPasswordHint,
                 Kdf = Kdf.GetValueOrDefault(KdfType.PBKDF2_SHA256),
-                KdfIterations = KdfIterations.GetValueOrDefault(5000)
+                KdfIterations = KdfIterations.GetValueOrDefault(5000),
             };
 
-            if(Key != null)
+            if (ReferenceData != null)
+            {
+                user.ReferenceData = JsonConvert.SerializeObject(ReferenceData);
+            }
+
+            if (Key != null)
             {
                 user.Key = Key;
             }
 
-            if(Keys != null)
+            if (Keys != null)
             {
                 Keys.ToUser(user);
             }
@@ -52,12 +60,12 @@ namespace Bit.Core.Models.Api
 
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
-            if(Kdf.HasValue && KdfIterations.HasValue)
+            if (Kdf.HasValue && KdfIterations.HasValue)
             {
-                switch(Kdf.Value)
+                switch (Kdf.Value)
                 {
                     case KdfType.PBKDF2_SHA256:
-                        if(KdfIterations.Value < 5000 || KdfIterations.Value > 1_000_000)
+                        if (KdfIterations.Value < 5000 || KdfIterations.Value > 1_000_000)
                         {
                             yield return new ValidationResult("KDF iterations must be between 5000 and 1000000.");
                         }

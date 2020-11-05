@@ -20,17 +20,18 @@ namespace Bit.Core.Models.Data
         public OrganizationUserType Type { get; set; }
         public bool AccessAll { get; set; }
         public string ExternalId { get; set; }
+        public string SsoExternalId { get; set; }
 
         public Dictionary<TwoFactorProviderType, TwoFactorProvider> GetTwoFactorProviders()
         {
-            if(string.IsNullOrWhiteSpace(TwoFactorProviders))
+            if (string.IsNullOrWhiteSpace(TwoFactorProviders))
             {
                 return null;
             }
 
             try
             {
-                if(_twoFactorProviders == null)
+                if (_twoFactorProviders == null)
                 {
                     _twoFactorProviders =
                         JsonConvert.DeserializeObject<Dictionary<TwoFactorProviderType, TwoFactorProvider>>(
@@ -39,7 +40,7 @@ namespace Bit.Core.Models.Data
 
                 return _twoFactorProviders;
             }
-            catch(JsonSerializationException)
+            catch (JsonSerializationException)
             {
                 return null;
             }

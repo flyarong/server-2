@@ -57,9 +57,13 @@ namespace Bit.Notifications
                     MessagePack.Resolvers.ContractlessStandardResolver.Instance
                 };
             });
-            if(!string.IsNullOrWhiteSpace(globalSettings.Notifications?.AzureSignalRConnectionString))
+            if (CoreHelpers.SettingHasValue(globalSettings.Notifications?.RedisConnectionString))
             {
-                signalRServerBuilder.AddAzureSignalR(globalSettings.Notifications.AzureSignalRConnectionString);
+                signalRServerBuilder.AddStackExchangeRedis(globalSettings.Notifications.RedisConnectionString,
+                    options =>
+                    {
+                        options.Configuration.ChannelPrefix = "Notifications";
+                    });
             }
             services.AddSingleton<IUserIdProvider, SubjectUserIdProvider>();
             services.AddSingleton<ConnectionCounter>();
@@ -68,12 +72,12 @@ namespace Bit.Notifications
             services.AddMvc();
 
             services.AddHostedService<HeartbeatHostedService>();
-            if(!globalSettings.SelfHosted)
+            if (!globalSettings.SelfHosted)
             {
                 // Hosted Services
                 Jobs.JobsHostedService.AddJobsServices(services);
                 services.AddHostedService<Jobs.JobsHostedService>();
-                if(CoreHelpers.SettingHasValue(globalSettings.Notifications?.ConnectionString))
+                if (CoreHelpers.SettingHasValue(globalSettings.Notifications?.ConnectionString))
                 {
                     services.AddHostedService<AzureQueueHostedService>();
                 }
@@ -89,7 +93,7 @@ namespace Bit.Notifications
             IdentityModelEventSource.ShowPII = true;
             app.UseSerilog(env, appLifetime, globalSettings);
 
-            if(env.IsDevelopment())
+            if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
             }
@@ -98,32 +102,21 @@ namespace Bit.Notifications
             app.UseRouting();
 
             // Add Cors
-            app.UseCors(policy => policy.SetIsOriginAllowed(h => true)
+            app.UseCors(policy => policy.SetIsOriginAllowed(o => CoreHelpers.IsCorsOriginAllowed(o, globalSettings))
                 .AllowAnyMethod().AllowAnyHeader().AllowCredentials());
 
             // Add authentication to the request pipeline.
             app.UseAuthentication();
             app.UseAuthorization();
 
-            // Add SignlarR
-            var useAzureSignalR = !string.IsNullOrWhiteSpace(
-                globalSettings.Notifications?.AzureSignalRConnectionString);
-            if(useAzureSignalR)
-            {
-                app.UseAzureSignalR(routes => routes.MapHub<NotificationsHub>("/hub"));
-            }
-
             // Add endpoints to the request pipeline.
             app.UseEndpoints(endpoints =>
             {
-                if(!useAzureSignalR)
+                endpoints.MapHub<NotificationsHub>("/hub", options =>
                 {
-                    endpoints.MapHub<NotificationsHub>("/hub", options =>
-                    {
-                        options.ApplicationMaxBufferSize = 2048; // client => server messages are not even used
-                        options.TransportMaxBufferSize = 4096;
-                    });
-                }
+                    options.ApplicationMaxBufferSize = 2048; // client => server messages are not even used
+                    options.TransportMaxBufferSize = 4096;
+                });
                 endpoints.MapDefaultControllerRoute();
             });
         }

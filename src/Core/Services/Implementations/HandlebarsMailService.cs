@@ -186,6 +186,20 @@ namespace Bit.Core.Services
             await _mailDeliveryService.SendEmailAsync(message);
         }
 
+        public async Task SendOrganizationUserRemovedForPolicyTwoStepEmailAsync(string organizationName, string email)
+        {
+            var message = CreateDefaultMessage($"You have been removed from {organizationName}", email);
+            var model = new OrganizationUserRemovedForPolicyTwoStepViewModel
+            {
+                OrganizationName = CoreHelpers.SanitizeForEmail(organizationName),
+                WebVaultUrl = _globalSettings.BaseServiceUri.VaultWithHash,
+                SiteName = _globalSettings.SiteName
+            };
+            await AddMessageContentAsync(message, "OrganizationUserRemovedForPolicyTwoStep", model);
+            message.Category = "OrganizationUserRemovedForPolicyTwoStep";
+            await _mailDeliveryService.SendEmailAsync(message);
+        }
+
         public async Task SendWelcomeEmailAsync(User user)
         {
             var message = CreateDefaultMessage("Welcome", user.Email);
@@ -264,6 +278,18 @@ namespace Bit.Core.Services
             message.Category = "AddedCredit";
             await _mailDeliveryService.SendEmailAsync(message);
         }
+        
+        public async Task SendLicenseExpiredAsync(IEnumerable<string> emails, string organizationName = null)
+        {
+            var message = CreateDefaultMessage("License Expired", emails);
+            var model = new LicenseExpiredViewModel
+            {
+                OrganizationName = organizationName,
+            };
+            await AddMessageContentAsync(message, "LicenseExpired", model);
+            message.Category = "LicenseExpired";
+            await _mailDeliveryService.SendEmailAsync(message);
+        }
 
         public async Task SendNewDeviceLoggedInEmail(string email, string deviceType, DateTime timestamp, string ip)
         {
@@ -300,6 +326,20 @@ namespace Bit.Core.Services
             await _mailDeliveryService.SendEmailAsync(message);
         }
 
+        public async Task SendOrganizationUserRemovedForPolicySingleOrgEmailAsync(string organizationName, string email)
+        {
+            var message = CreateDefaultMessage($"You have been removed from {organizationName}", email);
+            var model = new OrganizationUserRemovedForPolicySingleOrgViewModel
+            {
+                OrganizationName = CoreHelpers.SanitizeForEmail(organizationName),
+                WebVaultUrl = _globalSettings.BaseServiceUri.VaultWithHash,
+                SiteName = _globalSettings.SiteName
+            };
+            await AddMessageContentAsync(message, "OrganizationUserRemovedForPolicySingleOrg", model);
+            message.Category = "OrganizationUserRemovedForPolicySingleOrg";
+            await _mailDeliveryService.SendEmailAsync(message);
+        }
+
         private MailMessage CreateDefaultMessage(string subject, string toEmail)
         {
             return CreateDefaultMessage(subject, new List<string> { toEmail });
@@ -324,10 +364,10 @@ namespace Bit.Core.Services
         private async Task<string> RenderAsync<T>(string templateName, T model)
         {
             await RegisterHelpersAndPartialsAsync();
-            if(!_templateCache.TryGetValue(templateName, out var template))
+            if (!_templateCache.TryGetValue(templateName, out var template))
             {
                 var source = await ReadSourceAsync(templateName);
-                if(source != null)
+                if (source != null)
                 {
                     template = Handlebars.Compile(source);
                     _templateCache.Add(templateName, template);
@@ -340,12 +380,12 @@ namespace Bit.Core.Services
         {
             var assembly = typeof(HandlebarsMailService).GetTypeInfo().Assembly;
             var fullTemplateName = $"{Namespace}.{templateName}.hbs";
-            if(!assembly.GetManifestResourceNames().Any(f => f == fullTemplateName))
+            if (!assembly.GetManifestResourceNames().Any(f => f == fullTemplateName))
             {
                 return null;
             }
-            using(var s = assembly.GetManifestResourceStream(fullTemplateName))
-            using(var sr = new StreamReader(s))
+            using (var s = assembly.GetManifestResourceStream(fullTemplateName))
+            using (var sr = new StreamReader(s))
             {
                 return await sr.ReadToEndAsync();
             }
@@ -353,7 +393,7 @@ namespace Bit.Core.Services
 
         private async Task RegisterHelpersAndPartialsAsync()
         {
-            if(_registeredHelpersAndPartials)
+            if (_registeredHelpersAndPartials)
             {
                 return;
             }
@@ -370,12 +410,12 @@ namespace Bit.Core.Services
 
             Handlebars.RegisterHelper("date", (writer, context, parameters) =>
             {
-                if(parameters.Length == 0 || !(parameters[0] is DateTime))
+                if (parameters.Length == 0 || !(parameters[0] is DateTime))
                 {
                     writer.WriteSafeString(string.Empty);
                     return;
                 }
-                if(parameters.Length > 0 && parameters[1] is string)
+                if (parameters.Length > 0 && parameters[1] is string)
                 {
                     writer.WriteSafeString(((DateTime)parameters[0]).ToString(parameters[1].ToString()));
                 }
@@ -387,7 +427,7 @@ namespace Bit.Core.Services
 
             Handlebars.RegisterHelper("usd", (writer, context, parameters) =>
             {
-                if(parameters.Length == 0 || !(parameters[0] is decimal))
+                if (parameters.Length == 0 || !(parameters[0] is decimal))
                 {
                     writer.WriteSafeString(string.Empty);
                     return;
@@ -397,7 +437,7 @@ namespace Bit.Core.Services
 
             Handlebars.RegisterHelper("link", (writer, context, parameters) =>
             {
-                if(parameters.Length == 0)
+                if (parameters.Length == 0)
                 {
                     writer.WriteSafeString(string.Empty);
                     return;
@@ -406,12 +446,12 @@ namespace Bit.Core.Services
                 var text = parameters[0].ToString();
                 var href = text;
                 var clickTrackingOff = false;
-                if(parameters.Length == 2)
+                if (parameters.Length == 2)
                 {
-                    if(parameters[1] is string)
+                    if (parameters[1] is string)
                     {
                         var p1 = parameters[1].ToString();
-                        if(p1 == "true" || p1 == "false")
+                        if (p1 == "true" || p1 == "false")
                         {
                             clickTrackingOff = p1 == "true";
                         }
@@ -420,26 +460,26 @@ namespace Bit.Core.Services
                             href = p1;
                         }
                     }
-                    else if(parameters[1] is bool)
+                    else if (parameters[1] is bool)
                     {
                         clickTrackingOff = (bool)parameters[1];
                     }
                 }
-                else if(parameters.Length > 2)
+                else if (parameters.Length > 2)
                 {
-                    if(parameters[1] is string)
+                    if (parameters[1] is string)
                     {
                         href = parameters[1].ToString();
                     }
-                    if(parameters[2] is string)
+                    if (parameters[2] is string)
                     {
                         var p2 = parameters[2].ToString();
-                        if(p2 == "true" || p2 == "false")
+                        if (p2 == "true" || p2 == "false")
                         {
                             clickTrackingOff = p2 == "true";
                         }
                     }
-                    else if(parameters[2] is bool)
+                    else if (parameters[2] is bool)
                     {
                         clickTrackingOff = (bool)parameters[2];
                     }

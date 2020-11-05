@@ -1,8 +1,9 @@
 ﻿using System;
-using System.Linq;
 using Bit.Core.Models.Table;
-using System.Collections.Generic;
 using Bit.Core.Models.Business;
+using Bit.Core.Models.StaticStore;
+using System.Linq;
+using Bit.Core.Enums;
 
 namespace Bit.Core.Models.Api
 {
@@ -11,12 +12,13 @@ namespace Bit.Core.Models.Api
         public OrganizationResponseModel(Organization organization, string obj = "organization")
             : base(obj)
         {
-            if(organization == null)
+            if (organization == null)
             {
                 throw new ArgumentNullException(nameof(organization));
             }
 
             Id = organization.Id.ToString();
+            Identifier = organization.Identifier;
             Name = organization.Name;
             BusinessName = organization.BusinessName;
             BusinessAddress1 = organization.BusinessAddress1;
@@ -25,12 +27,13 @@ namespace Bit.Core.Models.Api
             BusinessCountry = organization.BusinessCountry;
             BusinessTaxNumber = organization.BusinessTaxNumber;
             BillingEmail = organization.BillingEmail;
-            Plan = organization.Plan;
+            Plan = new PlanResponseModel(Utilities.StaticStore.Plans.FirstOrDefault(plan => plan.Type == organization.PlanType));
             PlanType = organization.PlanType;
             Seats = organization.Seats;
             MaxCollections = organization.MaxCollections;
             MaxStorageGb = organization.MaxStorageGb;
             UsePolicies = organization.UsePolicies;
+            UseSso = organization.UseSso;
             UseGroups = organization.UseGroups;
             UseDirectory = organization.UseDirectory;
             UseEvents = organization.UseEvents;
@@ -42,6 +45,7 @@ namespace Bit.Core.Models.Api
         }
 
         public string Id { get; set; }
+        public string Identifier { get; set; }
         public string Name { get; set; }
         public string BusinessName { get; set; }
         public string BusinessAddress1 { get; set; }
@@ -50,12 +54,13 @@ namespace Bit.Core.Models.Api
         public string BusinessCountry { get; set; }
         public string BusinessTaxNumber { get; set; }
         public string BillingEmail { get; set; }
-        public string Plan { get; set; }
-        public Enums.PlanType PlanType { get; set; }
+        public PlanResponseModel Plan { get; set; }
+        public PlanType PlanType { get; set; }
         public short? Seats { get; set; }
         public short? MaxCollections { get; set; }
         public short? MaxStorageGb { get; set; }
         public bool UsePolicies { get; set; }
+        public bool UseSso { get; set; }
         public bool UseGroups { get; set; }
         public bool UseDirectory { get; set; }
         public bool UseEvents { get; set; }
@@ -71,7 +76,7 @@ namespace Bit.Core.Models.Api
         public OrganizationSubscriptionResponseModel(Organization organization, SubscriptionInfo subscription = null)
             : base(organization, "organizationSubscription")
         {
-            if(subscription != null)
+            if (subscription != null)
             {
                 Subscription = subscription.Subscription != null ?
                     new BillingSubscription(subscription.Subscription) : null;

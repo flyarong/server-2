@@ -23,7 +23,7 @@ The server project is written in C# using .NET Core with ASP.NET Core. The datab
 
 ### Requirements
 
-- [.NET Core 2.x SDK](https://www.microsoft.com/net/download/core)
+- [.NET Core 3.1 SDK](https://www.microsoft.com/net/download/core)
 - [SQL Server 2017](https://docs.microsoft.com/en-us/sql/index)
 
 *These dependencies are free to use.*
@@ -97,6 +97,6 @@ Invoke-RestMethod -OutFile bitwarden.ps1 `
 
 ## Contribute
 
-Code contributions are welcome! Visual Studio or VS Code is highly recommended if you are working on this project. Please commit any pull requests against the `master` branch.
+Code contributions are welcome! Visual Studio or VS Code is highly recommended if you are working on this project. Please commit any pull requests against the `master` branch. Please see [`CONTRIBUTING.md`](CONTRIBUTING.md) for more info (and feel free to contribute to that guide as well).
 
 Security audits and feedback are welcome. Please open an issue or email us privately if the report is sensitive in nature. You can read our security policy in the [`SECURITY.md`](SECURITY.md) file. We also run a program on [HackerOne](https://hackerone.com/bitwarden).

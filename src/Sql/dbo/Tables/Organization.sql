@@ -1,5 +1,6 @@
 ﻿CREATE TABLE [dbo].[Organization] (
     [Id]                    UNIQUEIDENTIFIER NOT NULL,
+    [Identifier]            NVARCHAR (50)    NULL,
     [Name]                  NVARCHAR (50)    NOT NULL,
     [BusinessName]          NVARCHAR (50)    NULL,
     [BusinessAddress1]      NVARCHAR (50)    NULL,
@@ -13,6 +14,7 @@
     [Seats]                 SMALLINT         NULL,
     [MaxCollections]        SMALLINT         NULL,
     [UsePolicies]           BIT              NOT NULL,
+    [UseSso]                BIT              NOT NULL,
     [UseGroups]             BIT              NOT NULL,
     [UseDirectory]          BIT              NOT NULL,
     [UseEvents]             BIT              NOT NULL,
@@ -26,6 +28,7 @@
     [Gateway]               TINYINT          NULL,
     [GatewayCustomerId]     VARCHAR (50)     NULL,
     [GatewaySubscriptionId] VARCHAR (50)     NULL,
+    [ReferenceData]         NVARCHAR (MAX)   NULL,
     [Enabled]               BIT              NOT NULL,
     [LicenseKey]            VARCHAR (100)    NULL,
     [ApiKey]                VARCHAR (30)     NOT NULL,
@@ -41,4 +44,9 @@ GO
 CREATE NONCLUSTERED INDEX [IX_Organization_Enabled]
     ON [dbo].[Organization]([Id] ASC, [Enabled] ASC)
     INCLUDE ([UseTotp]);
+
+GO
+CREATE UNIQUE NONCLUSTERED INDEX [IX_Organization_Identifier]
+    ON [dbo].[Organization]([Identifier] ASC)
+    WHERE [Identifier] IS NOT NULL;
 

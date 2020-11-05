@@ -37,14 +37,19 @@ fi
 
 SCRIPTS_DIR="$OUTPUT/scripts"
 GITHUB_BASE_URL="https://raw.githubusercontent.com/bitwarden/server/master"
-COREVERSION="1.32.0"
-WEBVERSION="2.12.0"
+COREVERSION="1.37.2"
+WEBVERSION="2.16.2"
 
 # Functions
 
 function downloadSelf() {
-    curl -s -o $SCRIPT_PATH $GITHUB_BASE_URL/scripts/bitwarden.sh
-    chmod u+x $SCRIPT_PATH
+    if curl -s -w "http_code %{http_code}" -o $SCRIPT_PATH.1 $GITHUB_BASE_URL/scripts/bitwarden.sh | grep -q "^http_code 20[0-9]"
+    then
+        mv $SCRIPT_PATH.1 $SCRIPT_PATH
+        chmod u+x $SCRIPT_PATH
+    else
+        rm -f $SCRIPT_PATH.1
+    fi
 }
 
 function downloadRunFile() {
@@ -86,6 +91,7 @@ updatedb
 updaterun
 updateself
 updateconf
+renewcert
 rebuild
 help
 
@@ -127,6 +133,10 @@ elif [ "$1" == "stop" ]
 then
     checkOutputDirExists
     $SCRIPTS_DIR/run.sh stop $OUTPUT $COREVERSION $WEBVERSION
+elif [ "$1" == "renewcert" ]
+then
+    checkOutputDirExists
+    $SCRIPTS_DIR/run.sh renewcert $OUTPUT $COREVERSION $WEBVERSION
 elif [ "$1" == "updaterun" ]
 then
     checkOutputDirExists

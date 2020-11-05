@@ -92,16 +92,16 @@ server {
     proxy_pass http://web:5000/u2f-connector.html;
   }
 
+  location = /sso-connector.html {
+    proxy_pass http://web:5000/sso-connector.html;
+  }
+
   location /attachments/ {
     proxy_pass http://attachments:5000/;
   }
 
   location /api/ {
     proxy_pass http://api:5000/;
-  }
-
-  location /identity/ {
-    proxy_pass http://identity:5000/;
   }
 
   location /icons/ {
@@ -122,8 +122,35 @@ server {
     proxy_pass http://events:5000/;
   }
 
+  location /sso {
+    proxy_pass http://sso:5000;
+{{#if Ssl}}
+    include /etc/nginx/security-headers-ssl.conf;
+{{/if}}
+    include /etc/nginx/security-headers.conf;
+    add_header X-Frame-Options SAMEORIGIN;
+  }
+
+  location /identity {
+    proxy_pass http://identity:5000;
+{{#if Ssl}}
+    include /etc/nginx/security-headers-ssl.conf;
+{{/if}}
+    include /etc/nginx/security-headers.conf;
+    add_header X-Frame-Options SAMEORIGIN;
+  }
+
   location /admin {
     proxy_pass http://admin:5000;
+{{#if Ssl}}
+    include /etc/nginx/security-headers-ssl.conf;
+{{/if}}
+    include /etc/nginx/security-headers.conf;
+    add_header X-Frame-Options SAMEORIGIN;
+  }
+
+  location /portal {
+    proxy_pass http://portal:5000;
 {{#if Ssl}}
     include /etc/nginx/security-headers-ssl.conf;
 {{/if}}

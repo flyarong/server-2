@@ -60,16 +60,16 @@ namespace Bit.Core.Services
         public async Task SaveAsync(Cipher cipher, Guid savingUserId, IEnumerable<Guid> collectionIds = null,
             bool skipPermissionCheck = false, bool limitCollectionScope = true)
         {
-            if(!skipPermissionCheck && !(await UserCanEditAsync(cipher, savingUserId)))
+            if (!skipPermissionCheck && !(await UserCanEditAsync(cipher, savingUserId)))
             {
                 throw new BadRequestException("You do not have permissions to edit this.");
             }
 
-            if(cipher.Id == default(Guid))
+            if (cipher.Id == default(Guid))
             {
-                if(cipher.OrganizationId.HasValue && collectionIds != null)
+                if (cipher.OrganizationId.HasValue && collectionIds != null)
                 {
-                    if(limitCollectionScope)
+                    if (limitCollectionScope)
                     {
                         // Set user ID to limit scope of collection ids in the create sproc
                         cipher.UserId = savingUserId;
@@ -87,7 +87,7 @@ namespace Bit.Core.Services
             }
             else
             {
-                if(collectionIds != null)
+                if (collectionIds != null)
                 {
                     throw new ArgumentException("Cannot create cipher with collection ids at the same time.");
                 }
@@ -103,15 +103,15 @@ namespace Bit.Core.Services
         public async Task SaveDetailsAsync(CipherDetails cipher, Guid savingUserId,
             IEnumerable<Guid> collectionIds = null, bool skipPermissionCheck = false)
         {
-            if(!skipPermissionCheck && !(await UserCanEditAsync(cipher, savingUserId)))
+            if (!skipPermissionCheck && !(await UserCanEditAsync(cipher, savingUserId)))
             {
                 throw new BadRequestException("You do not have permissions to edit this.");
             }
 
             cipher.UserId = savingUserId;
-            if(cipher.Id == default(Guid))
+            if (cipher.Id == default(Guid))
             {
-                if(cipher.OrganizationId.HasValue && collectionIds != null)
+                if (cipher.OrganizationId.HasValue && collectionIds != null)
                 {
                     await _cipherRepository.CreateAsync(cipher, collectionIds);
                 }
@@ -121,7 +121,7 @@ namespace Bit.Core.Services
                 }
                 await _eventService.LogCipherEventAsync(cipher, Enums.EventType.Cipher_Created);
 
-                if(cipher.OrganizationId.HasValue)
+                if (cipher.OrganizationId.HasValue)
                 {
                     var org = await _organizationRepository.GetByIdAsync(cipher.OrganizationId.Value);
                     cipher.OrganizationUseTotp = org.UseTotp;
@@ -132,7 +132,7 @@ namespace Bit.Core.Services
             }
             else
             {
-                if(collectionIds != null)
+                if (collectionIds != null)
                 {
                     throw new ArgumentException("Cannot create cipher with collection ids at the same time.");
                 }
@@ -148,26 +148,26 @@ namespace Bit.Core.Services
         public async Task CreateAttachmentAsync(Cipher cipher, Stream stream, string fileName, string key,
             long requestLength, Guid savingUserId, bool orgAdmin = false)
         {
-            if(!orgAdmin && !(await UserCanEditAsync(cipher, savingUserId)))
+            if (!orgAdmin && !(await UserCanEditAsync(cipher, savingUserId)))
             {
                 throw new BadRequestException("You do not have permissions to edit this.");
             }
 
-            if(requestLength < 1)
+            if (requestLength < 1)
             {
                 throw new BadRequestException("No data to attach.");
             }
 
             var storageBytesRemaining = 0L;
-            if(cipher.UserId.HasValue)
+            if (cipher.UserId.HasValue)
             {
                 var user = await _userRepository.GetByIdAsync(cipher.UserId.Value);
-                if(!(await _userService.CanAccessPremium(user)))
+                if (!(await _userService.CanAccessPremium(user)))
                 {
                     throw new BadRequestException("You must have premium status to use attachments.");
                 }
 
-                if(user.Premium)
+                if (user.Premium)
                 {
                     storageBytesRemaining = user.StorageBytesRemaining();
                 }
@@ -179,10 +179,10 @@ namespace Bit.Core.Services
                         _globalSettings.SelfHosted ? (short)10240 : (short)1);
                 }
             }
-            else if(cipher.OrganizationId.HasValue)
+            else if (cipher.OrganizationId.HasValue)
             {
                 var org = await _organizationRepository.GetByIdAsync(cipher.OrganizationId.Value);
-                if(!org.MaxStorageGb.HasValue)
+                if (!org.MaxStorageGb.HasValue)
                 {
                     throw new BadRequestException("This organization cannot use attachments.");
                 }
@@ -190,7 +190,7 @@ namespace Bit.Core.Services
                 storageBytesRemaining = org.StorageBytesRemaining();
             }
 
-            if(storageBytesRemaining < requestLength)
+            if (storageBytesRemaining < requestLength)
             {
                 throw new BadRequestException("Not enough storage available.");
             }
@@ -236,29 +236,29 @@ namespace Bit.Core.Services
         {
             try
             {
-                if(requestLength < 1)
+                if (requestLength < 1)
                 {
                     throw new BadRequestException("No data to attach.");
                 }
 
-                if(cipher.Id == default(Guid))
+                if (cipher.Id == default(Guid))
                 {
                     throw new BadRequestException(nameof(cipher.Id));
                 }
 
-                if(cipher.OrganizationId.HasValue)
+                if (cipher.OrganizationId.HasValue)
                 {
                     throw new BadRequestException("Cipher belongs to an organization already.");
                 }
 
                 var org = await _organizationRepository.GetByIdAsync(organizationId);
-                if(org == null || !org.MaxStorageGb.HasValue)
+                if (org == null || !org.MaxStorageGb.HasValue)
                 {
                     throw new BadRequestException("This organization cannot use attachments.");
                 }
 
                 var storageBytesRemaining = org.StorageBytesRemaining();
-                if(storageBytesRemaining < requestLength)
+                if (storageBytesRemaining < requestLength)
                 {
                     throw new BadRequestException("Not enough storage available for this organization.");
                 }
@@ -275,30 +275,40 @@ namespace Bit.Core.Services
 
         public async Task DeleteAsync(Cipher cipher, Guid deletingUserId, bool orgAdmin = false)
         {
-            if(!orgAdmin && !(await UserCanEditAsync(cipher, deletingUserId)))
+            if (!orgAdmin && !(await UserCanEditAsync(cipher, deletingUserId)))
             {
                 throw new BadRequestException("You do not have permissions to delete this.");
             }
 
             await _cipherRepository.DeleteAsync(cipher);
             await _attachmentStorageService.DeleteAttachmentsForCipherAsync(cipher.Id);
-            await _eventService.LogCipherEventAsync(cipher, Enums.EventType.Cipher_Deleted);
+            await _eventService.LogCipherEventAsync(cipher, EventType.Cipher_Deleted);
 
             // push
             await _pushService.PushSyncCipherDeleteAsync(cipher);
         }
 
-        public async Task DeleteManyAsync(IEnumerable<Guid> cipherIds, Guid deletingUserId)
+        public async Task DeleteManyAsync(IEnumerable<Guid> cipherIds, Guid deletingUserId, Guid? organizationId = null, bool orgAdmin = false)
         {
             var cipherIdsSet = new HashSet<Guid>(cipherIds);
-            var ciphers = await _cipherRepository.GetManyByUserIdAsync(deletingUserId);
-            var deletingCiphers = ciphers.Where(c => cipherIdsSet.Contains(c.Id) && c.Edit);
+            var deletingCiphers = new List<Cipher>();
 
-            await _cipherRepository.DeleteAsync(cipherIds, deletingUserId);
+            if (orgAdmin && organizationId.HasValue)
+            {
+                var ciphers = await _cipherRepository.GetManyByOrganizationIdAsync(organizationId.Value);
+                deletingCiphers = ciphers.Where(c => cipherIdsSet.Contains(c.Id)).ToList();
+                await _cipherRepository.DeleteByIdsOrganizationIdAsync(deletingCiphers.Select(c => c.Id), organizationId.Value);
+            }
+            else
+            {
+                var ciphers = await _cipherRepository.GetManyByUserIdAsync(deletingUserId);
+                deletingCiphers = ciphers.Where(c => cipherIdsSet.Contains(c.Id) && c.Edit).Select(x => (Cipher)x).ToList();
+                await _cipherRepository.DeleteAsync(deletingCiphers.Select(c => c.Id), deletingUserId);
+            }
 
             var events = deletingCiphers.Select(c =>
                 new Tuple<Cipher, EventType, DateTime?>(c, EventType.Cipher_Deleted, null));
-            foreach(var eventsBatch in events.Batch(100))
+            foreach (var eventsBatch in events.Batch(100))
             {
                 await _eventService.LogCipherEventsAsync(eventsBatch);
             }
@@ -310,12 +320,12 @@ namespace Bit.Core.Services
         public async Task DeleteAttachmentAsync(Cipher cipher, string attachmentId, Guid deletingUserId,
             bool orgAdmin = false)
         {
-            if(!orgAdmin && !(await UserCanEditAsync(cipher, deletingUserId)))
+            if (!orgAdmin && !(await UserCanEditAsync(cipher, deletingUserId)))
             {
                 throw new BadRequestException("You do not have permissions to delete this.");
             }
 
-            if(!cipher.ContainsAttachment(attachmentId))
+            if (!cipher.ContainsAttachment(attachmentId))
             {
                 throw new NotFoundException();
             }
@@ -332,7 +342,7 @@ namespace Bit.Core.Services
         public async Task PurgeAsync(Guid organizationId)
         {
             var org = await _organizationRepository.GetByIdAsync(organizationId);
-            if(org == null)
+            if (org == null)
             {
                 throw new NotFoundException();
             }
@@ -342,10 +352,10 @@ namespace Bit.Core.Services
 
         public async Task MoveManyAsync(IEnumerable<Guid> cipherIds, Guid? destinationFolderId, Guid movingUserId)
         {
-            if(destinationFolderId.HasValue)
+            if (destinationFolderId.HasValue)
             {
                 var folder = await _folderRepository.GetByIdAsync(destinationFolderId.Value);
-                if(folder == null || folder.UserId != movingUserId)
+                if (folder == null || folder.UserId != movingUserId)
                 {
                     throw new BadRequestException("Invalid folder.");
                 }
@@ -358,7 +368,7 @@ namespace Bit.Core.Services
 
         public async Task SaveFolderAsync(Folder folder)
         {
-            if(folder.Id == default(Guid))
+            if (folder.Id == default(Guid))
             {
                 await _folderRepository.CreateAsync(folder);
 
@@ -394,29 +404,29 @@ namespace Bit.Core.Services
 
             try
             {
-                if(cipher.Id == default(Guid))
+                if (cipher.Id == default(Guid))
                 {
                     throw new BadRequestException(nameof(cipher.Id));
                 }
 
-                if(cipher.OrganizationId.HasValue)
+                if (cipher.OrganizationId.HasValue)
                 {
                     throw new BadRequestException("Already belongs to an organization.");
                 }
 
-                if(!cipher.UserId.HasValue || cipher.UserId.Value != sharingUserId)
+                if (!cipher.UserId.HasValue || cipher.UserId.Value != sharingUserId)
                 {
                     throw new NotFoundException();
                 }
 
                 var org = await _organizationRepository.GetByIdAsync(organizationId);
-                if(hasAttachments && !org.MaxStorageGb.HasValue)
+                if (hasAttachments && !org.MaxStorageGb.HasValue)
                 {
                     throw new BadRequestException("This organization cannot use attachments.");
                 }
 
                 var storageAdjustment = attachments?.Sum(a => a.Value.Size) ?? 0;
-                if(org.StorageBytesRemaining() < storageAdjustment)
+                if (org.StorageBytesRemaining() < storageAdjustment)
                 {
                     throw new BadRequestException("Not enough storage available for this organization.");
                 }
@@ -425,7 +435,7 @@ namespace Bit.Core.Services
                 cipher.UserId = sharingUserId;
                 cipher.OrganizationId = organizationId;
                 cipher.RevisionDate = DateTime.UtcNow;
-                if(!await _cipherRepository.ReplaceAsync(cipher, collectionIds))
+                if (!await _cipherRepository.ReplaceAsync(cipher, collectionIds))
                 {
                     throw new BadRequestException("Unable to save.");
                 }
@@ -433,10 +443,10 @@ namespace Bit.Core.Services
                 updatedCipher = true;
                 await _eventService.LogCipherEventAsync(cipher, Enums.EventType.Cipher_Shared);
 
-                if(hasOldAttachments)
+                if (hasOldAttachments)
                 {
                     // migrate old attachments
-                    foreach(var attachment in attachments.Where(a => a.Key == null))
+                    foreach (var attachment in attachments.Where(a => a.Key == null))
                     {
                         await _attachmentStorageService.StartShareAttachmentAsync(cipher.Id, organizationId,
                             attachment.Key);
@@ -453,23 +463,23 @@ namespace Bit.Core.Services
             catch
             {
                 // roll everything back
-                if(updatedCipher)
+                if (updatedCipher)
                 {
                     await _cipherRepository.ReplaceAsync(originalCipher);
                 }
 
-                if(!hasOldAttachments || !migratedAttachments)
+                if (!hasOldAttachments || !migratedAttachments)
                 {
                     throw;
                 }
 
-                if(updatedCipher)
+                if (updatedCipher)
                 {
                     await _userRepository.UpdateStorageAsync(sharingUserId);
                     await _organizationRepository.UpdateStorageAsync(organizationId);
                 }
 
-                foreach(var attachment in attachments.Where(a => a.Key == null))
+                foreach (var attachment in attachments.Where(a => a.Key == null))
                 {
                     await _attachmentStorageService.RollbackShareAttachmentAsync(cipher.Id, organizationId,
                         attachment.Key);
@@ -484,19 +494,19 @@ namespace Bit.Core.Services
             IEnumerable<Guid> collectionIds, Guid sharingUserId)
         {
             var cipherIds = new List<Guid>();
-            foreach(var cipher in ciphers)
+            foreach (var cipher in ciphers)
             {
-                if(cipher.Id == default(Guid))
+                if (cipher.Id == default(Guid))
                 {
                     throw new BadRequestException("All ciphers must already exist.");
                 }
 
-                if(cipher.OrganizationId.HasValue)
+                if (cipher.OrganizationId.HasValue)
                 {
                     throw new BadRequestException("One or more ciphers already belong to an organization.");
                 }
 
-                if(!cipher.UserId.HasValue || cipher.UserId.Value != sharingUserId)
+                if (!cipher.UserId.HasValue || cipher.UserId.Value != sharingUserId)
                 {
                     throw new BadRequestException("One or more ciphers do not belong to you.");
                 }
@@ -513,7 +523,7 @@ namespace Bit.Core.Services
 
             var events = ciphers.Select(c =>
                 new Tuple<Cipher, EventType, DateTime?>(c, EventType.Cipher_Shared, null));
-            foreach(var eventsBatch in events.Batch(100))
+            foreach (var eventsBatch in events.Batch(100))
             {
                 await _eventService.LogCipherEventsAsync(eventsBatch);
             }
@@ -525,12 +535,12 @@ namespace Bit.Core.Services
         public async Task SaveCollectionsAsync(Cipher cipher, IEnumerable<Guid> collectionIds, Guid savingUserId,
             bool orgAdmin)
         {
-            if(cipher.Id == default(Guid))
+            if (cipher.Id == default(Guid))
             {
                 throw new BadRequestException(nameof(cipher.Id));
             }
 
-            if(!cipher.OrganizationId.HasValue)
+            if (!cipher.OrganizationId.HasValue)
             {
                 throw new BadRequestException("Cipher must belong to an organization.");
             }
@@ -539,14 +549,14 @@ namespace Bit.Core.Services
 
             // The sprocs will validate that all collections belong to this org/user and that they have 
             // proper write permissions.
-            if(orgAdmin)
+            if (orgAdmin)
             {
                 await _collectionCipherRepository.UpdateCollectionsForAdminAsync(cipher.Id,
                     cipher.OrganizationId.Value, collectionIds);
             }
             else
             {
-                if(!(await UserCanEditAsync(cipher, savingUserId)))
+                if (!(await UserCanEditAsync(cipher, savingUserId)))
                 {
                     throw new BadRequestException("You do not have permissions to edit this.");
                 }
@@ -564,29 +574,29 @@ namespace Bit.Core.Services
             List<CipherDetails> ciphers,
             IEnumerable<KeyValuePair<int, int>> folderRelationships)
         {
-            foreach(var cipher in ciphers)
+            foreach (var cipher in ciphers)
             {
                 cipher.SetNewId();
 
-                if(cipher.UserId.HasValue && cipher.Favorite)
+                if (cipher.UserId.HasValue && cipher.Favorite)
                 {
                     cipher.Favorites = $"{{\"{cipher.UserId.ToString().ToUpperInvariant()}\":\"true\"}}";
                 }
             }
 
             // Init. ids for folders
-            foreach(var folder in folders)
+            foreach (var folder in folders)
             {
                 folder.SetNewId();
             }
 
             // Create the folder associations based on the newly created folder ids
-            foreach(var relationship in folderRelationships)
+            foreach (var relationship in folderRelationships)
             {
                 var cipher = ciphers.ElementAtOrDefault(relationship.Key);
                 var folder = folders.ElementAtOrDefault(relationship.Value);
 
-                if(cipher == null || folder == null)
+                if (cipher == null || folder == null)
                 {
                     continue;
                 }
@@ -600,7 +610,7 @@ namespace Bit.Core.Services
 
             // push
             var userId = folders.FirstOrDefault()?.UserId ?? ciphers.FirstOrDefault()?.UserId;
-            if(userId.HasValue)
+            if (userId.HasValue)
             {
                 await _pushService.PushSyncVaultAsync(userId.Value);
             }
@@ -612,13 +622,13 @@ namespace Bit.Core.Services
             IEnumerable<KeyValuePair<int, int>> collectionRelationships,
             Guid importingUserId)
         {
-            if(collections.Count > 0)
+            if (collections.Count > 0)
             {
                 var org = await _organizationRepository.GetByIdAsync(collections[0].OrganizationId);
-                if(org != null && org.MaxCollections.HasValue)
+                if (org != null && org.MaxCollections.HasValue)
                 {
                     var collectionCount = await _collectionRepository.GetCountByOrganizationIdAsync(org.Id);
-                    if(org.MaxCollections.Value < (collectionCount + collections.Count))
+                    if (org.MaxCollections.Value < (collectionCount + collections.Count))
                     {
                         throw new BadRequestException("This organization can only have a maximum of " +
                             $"{org.MaxCollections.Value} collections.");
@@ -627,25 +637,25 @@ namespace Bit.Core.Services
             }
 
             // Init. ids for ciphers
-            foreach(var cipher in ciphers)
+            foreach (var cipher in ciphers)
             {
                 cipher.SetNewId();
             }
 
             // Init. ids for collections
-            foreach(var collection in collections)
+            foreach (var collection in collections)
             {
                 collection.SetNewId();
             }
 
             // Create associations based on the newly assigned ids
             var collectionCiphers = new List<CollectionCipher>();
-            foreach(var relationship in collectionRelationships)
+            foreach (var relationship in collectionRelationships)
             {
                 var cipher = ciphers.ElementAtOrDefault(relationship.Key);
                 var collection = collections.ElementAtOrDefault(relationship.Value);
 
-                if(cipher == null || collection == null)
+                if (cipher == null || collection == null)
                 {
                     continue;
                 }
@@ -664,9 +674,116 @@ namespace Bit.Core.Services
             await _pushService.PushSyncVaultAsync(importingUserId);
         }
 
+        public async Task SoftDeleteAsync(Cipher cipher, Guid deletingUserId, bool orgAdmin = false)
+        {
+            if (!orgAdmin && !(await UserCanEditAsync(cipher, deletingUserId)))
+            {
+                throw new BadRequestException("You do not have permissions to soft delete this.");
+            }
+
+            if (cipher.DeletedDate.HasValue)
+            {
+                // Already soft-deleted, we can safely ignore this
+                return;
+            }
+
+            cipher.DeletedDate = cipher.RevisionDate = DateTime.UtcNow;
+
+            if (cipher is CipherDetails details)
+            {
+                await _cipherRepository.UpsertAsync(details);
+            }
+            else
+            {
+                await _cipherRepository.UpsertAsync(cipher);
+            }
+            await _eventService.LogCipherEventAsync(cipher, EventType.Cipher_SoftDeleted);
+
+            // push
+            await _pushService.PushSyncCipherUpdateAsync(cipher, null);
+        }
+
+        public async Task SoftDeleteManyAsync(IEnumerable<Guid> cipherIds, Guid deletingUserId, Guid? organizationId, bool orgAdmin)
+        {
+            var cipherIdsSet = new HashSet<Guid>(cipherIds);
+            var deletingCiphers = new List<Cipher>();
+
+            if (orgAdmin && organizationId.HasValue)
+            {
+                var ciphers = await _cipherRepository.GetManyByOrganizationIdAsync(organizationId.Value);
+                deletingCiphers = ciphers.Where(c => cipherIdsSet.Contains(c.Id)).ToList();
+                await _cipherRepository.SoftDeleteByIdsOrganizationIdAsync(deletingCiphers.Select(c => c.Id), organizationId.Value);
+            }
+            else
+            {
+                var ciphers = await _cipherRepository.GetManyByUserIdAsync(deletingUserId);
+                deletingCiphers = ciphers.Where(c => cipherIdsSet.Contains(c.Id) && c.Edit).Select(x => (Cipher)x).ToList();
+                await _cipherRepository.SoftDeleteAsync(deletingCiphers.Select(c =>  c.Id), deletingUserId);
+            }
+
+            var events = deletingCiphers.Select(c =>
+                new Tuple<Cipher, EventType, DateTime?>(c, EventType.Cipher_SoftDeleted, null));
+            foreach (var eventsBatch in events.Batch(100))
+            {
+                await _eventService.LogCipherEventsAsync(eventsBatch);
+            }
+
+            // push
+            await _pushService.PushSyncCiphersAsync(deletingUserId);
+        }
+
+        public async Task RestoreAsync(Cipher cipher, Guid restoringUserId, bool orgAdmin = false)
+        {
+            if (!orgAdmin && !(await UserCanEditAsync(cipher, restoringUserId)))
+            {
+                throw new BadRequestException("You do not have permissions to delete this.");
+            }
+
+            if (!cipher.DeletedDate.HasValue)
+            {
+                // Already restored, we can safely ignore this
+                return;
+            }
+
+            cipher.DeletedDate = null;
+            cipher.RevisionDate = DateTime.UtcNow;
+
+            if (cipher is CipherDetails details)
+            {
+                await _cipherRepository.UpsertAsync(details);
+            }
+            else
+            {
+                await _cipherRepository.UpsertAsync(cipher);
+            }
+            await _eventService.LogCipherEventAsync(cipher, EventType.Cipher_Restored);
+
+            // push
+            await _pushService.PushSyncCipherUpdateAsync(cipher, null);
+        }
+
+        public async Task RestoreManyAsync(IEnumerable<Guid> cipherIds, Guid restoringUserId)
+        {
+            var cipherIdsSet = new HashSet<Guid>(cipherIds);
+            var ciphers = await _cipherRepository.GetManyByUserIdAsync(restoringUserId);
+            var restoringCiphers = ciphers.Where(c => cipherIdsSet.Contains(c.Id) && c.Edit);
+
+            await _cipherRepository.RestoreAsync(cipherIds, restoringUserId);
+
+            var events = restoringCiphers.Select(c =>
+                new Tuple<Cipher, EventType, DateTime?>(c, EventType.Cipher_Restored, null));
+            foreach (var eventsBatch in events.Batch(100))
+            {
+                await _eventService.LogCipherEventsAsync(eventsBatch);
+            }
+
+            // push
+            await _pushService.PushSyncCiphersAsync(restoringUserId);
+        }
+
         private async Task<bool> UserCanEditAsync(Cipher cipher, Guid userId)
         {
-            if(!cipher.OrganizationId.HasValue && cipher.UserId.HasValue && cipher.UserId.Value == userId)
+            if (!cipher.OrganizationId.HasValue && cipher.UserId.HasValue && cipher.UserId.Value == userId)
             {
                 return true;
             }

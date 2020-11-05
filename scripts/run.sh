@@ -85,6 +85,7 @@ function install() {
 
 function dockerComposeUp() {
     dockerComposeFiles
+    dockerComposeVolumes
     docker-compose up -d
 }
 
@@ -108,6 +109,32 @@ function dockerComposeFiles() {
     export COMPOSE_HTTP_TIMEOUT="300"
 }
 
+function dockerComposeVolumes() {
+    createDir "core"
+    createDir "core/attachments"
+    createDir "logs"
+    createDir "logs/admin"
+    createDir "logs/api"
+    createDir "logs/events"
+    createDir "logs/icons"
+    createDir "logs/identity"
+    createDir "logs/mssql"
+    createDir "logs/nginx"
+    createDir "logs/notifications"
+    createDir "logs/sso"
+    createDir "logs/portal"
+    createDir "mssql/backups"
+    createDir "mssql/data"
+}
+
+function createDir() {
+    if [ ! -d "${OUTPUT_DIR}/$1" ]
+    then
+        echo "Creating directory $OUTPUT_DIR/$1"
+        mkdir -p $OUTPUT_DIR/$1
+    fi
+}
+
 function dockerPrune() {
     docker image prune --all --force --filter="label=com.bitwarden.product=bitwarden" \
         --filter="label!=com.bitwarden.project=setup"
@@ -120,6 +147,16 @@ function updateLetsEncrypt() {
         docker run -i --rm --name certbot -p 443:443 -p 80:80 \
             -v $OUTPUT_DIR/letsencrypt:/etc/letsencrypt/ certbot/certbot \
             renew --logs-dir /etc/letsencrypt/logs
+    fi
+}
+
+function forceUpdateLetsEncrypt() {
+    if [ -d "${OUTPUT_DIR}/letsencrypt/live" ]
+    then
+        docker pull certbot/certbot
+        docker run -i --rm --name certbot -p 443:443 -p 80:80 \
+            -v $OUTPUT_DIR/letsencrypt:/etc/letsencrypt/ certbot/certbot \
+            renew --logs-dir /etc/letsencrypt/logs --force-renew
     fi
 }
 
@@ -158,6 +195,14 @@ function restart() {
     printEnvironment
 }
 
+function certRestart() {
+    dockerComposeDown
+    dockerComposePull
+    forceUpdateLetsEncrypt
+    dockerComposeUp
+    printEnvironment
+}
+
 function pullSetup() {
     docker pull bitwarden/setup:$COREVERSION
 }
@@ -176,6 +221,9 @@ then
 elif [ "$1" == "stop" ]
 then
     dockerComposeDown
+elif [ "$1" == "renewcert" ]
+then
+    certRestart
 elif [ "$1" == "updateconf" ]
 then
     dockerComposeDown
@@ -185,6 +233,15 @@ then
     updateDatabase
 elif [ "$1" == "update" ]
 then
+    dockerComposeFiles
+    CORE_ID=$(docker-compose ps -q admin)
+    WEB_ID=$(docker-compose ps -q web)
+    if docker inspect --format='{{.Config.Image}}:' $CORE_ID | grep -F ":$COREVERSION:" | grep -q ":[0-9.]*:$" &&
+       docker inspect --format='{{.Config.Image}}:' $WEB_ID | grep -F ":$WEBVERSION:" | grep -q ":[0-9.]*:$"
+    then
+        echo "Update not needed"
+        exit
+    fi
     dockerComposeDown
     update withpull
     restart

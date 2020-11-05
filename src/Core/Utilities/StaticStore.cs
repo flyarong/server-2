@@ -22,7 +22,7 @@ namespace Bit.Core.Utilities
             GlobalDomains.Add(GlobalEquivalentDomainsType.Citi, new List<string> { "accountonline.com", "citi.com", "citibank.com", "citicards.com", "citibankonline.com" });
             GlobalDomains.Add(GlobalEquivalentDomainsType.Cnet, new List<string> { "cnet.com", "cnettv.com", "com.com", "download.com", "news.com", "search.com", "upload.com" });
             GlobalDomains.Add(GlobalEquivalentDomainsType.Gap, new List<string> { "bananarepublic.com", "gap.com", "oldnavy.com", "piperlime.com" });
-            GlobalDomains.Add(GlobalEquivalentDomainsType.Microsoft, new List<string> { "bing.com", "hotmail.com", "live.com", "microsoft.com", "msn.com", "passport.net", "windows.com", "microsoftonline.com", "office365.com", "microsoftstore.com", "xbox.com", "azure.com", "windowsazure.com" });
+            GlobalDomains.Add(GlobalEquivalentDomainsType.Microsoft, new List<string> { "bing.com", "hotmail.com", "live.com", "microsoft.com", "msn.com", "passport.net", "windows.com", "microsoftonline.com", "office.com", "office365.com", "microsoftstore.com", "xbox.com", "azure.com", "windowsazure.com" });
             GlobalDomains.Add(GlobalEquivalentDomainsType.United, new List<string> { "ua2go.com", "ual.com", "united.com", "unitedwifi.com" });
             GlobalDomains.Add(GlobalEquivalentDomainsType.Yahoo, new List<string> { "overture.com", "yahoo.com" });
             GlobalDomains.Add(GlobalEquivalentDomainsType.Zonelabs, new List<string> { "zonealarm.com", "zonelabs.com" });
@@ -30,7 +30,7 @@ namespace Bit.Core.Utilities
             GlobalDomains.Add(GlobalEquivalentDomainsType.Avon, new List<string> { "avon.com", "youravon.com" });
             GlobalDomains.Add(GlobalEquivalentDomainsType.Diapers, new List<string> { "diapers.com", "soap.com", "wag.com", "yoyo.com", "beautybar.com", "casa.com", "afterschool.com", "vine.com", "bookworm.com", "look.com", "vinemarket.com" });
             GlobalDomains.Add(GlobalEquivalentDomainsType.Contacts, new List<string> { "1800contacts.com", "800contacts.com" });
-            GlobalDomains.Add(GlobalEquivalentDomainsType.Amazon, new List<string> { "amazon.com", "amazon.co.uk", "amazon.ca", "amazon.de", "amazon.fr", "amazon.es", "amazon.it", "amazon.com.au", "amazon.co.nz", "amazon.in" });
+            GlobalDomains.Add(GlobalEquivalentDomainsType.Amazon, new List<string> { "amazon.com", "amazon.ae", "amazon.ca", "amazon.co.uk", "amazon.com.au", "amazon.com.br", "amazon.com.mx", "amazon.com.tr", "amazon.de", "amazon.es", "amazon.fr", "amazon.in", "amazon.it", "amazon.nl", "amazon.sa", "amazon.sg" });
             GlobalDomains.Add(GlobalEquivalentDomainsType.Cox, new List<string> { "cox.com", "cox.net", "coxbusiness.com" });
             GlobalDomains.Add(GlobalEquivalentDomainsType.Norton, new List<string> { "mynortonaccount.com", "norton.com" });
             GlobalDomains.Add(GlobalEquivalentDomainsType.Verizon, new List<string> { "verizon.com", "verizon.net" });
@@ -53,7 +53,7 @@ namespace Bit.Core.Utilities
             GlobalDomains.Add(GlobalEquivalentDomainsType.Mtb, new List<string> { "mandtbank.com", "mtb.com" });
             GlobalDomains.Add(GlobalEquivalentDomainsType.Dropbox, new List<string> { "dropbox.com", "getdropbox.com" });
             GlobalDomains.Add(GlobalEquivalentDomainsType.Snapfish, new List<string> { "snapfish.com", "snapfish.ca" });
-            GlobalDomains.Add(GlobalEquivalentDomainsType.Alibaba, new List<string> { "alibaba.com", "aliexpress.com", "aliyun.com", "net.cn", "www.net.cn" });
+            GlobalDomains.Add(GlobalEquivalentDomainsType.Alibaba, new List<string> { "alibaba.com", "aliexpress.com", "aliyun.com", "net.cn" });
             GlobalDomains.Add(GlobalEquivalentDomainsType.Playstation, new List<string> { "playstation.com", "sonyentertainmentnetwork.com" });
             GlobalDomains.Add(GlobalEquivalentDomainsType.Mercado, new List<string> { "mercadolivre.com", "mercadolivre.com.br", "mercadolibre.com", "mercadolibre.com.ar", "mercadolibre.com.mx" });
             GlobalDomains.Add(GlobalEquivalentDomainsType.Zendesk, new List<string> { "zendesk.com", "zopim.com" });
@@ -76,17 +76,25 @@ namespace Bit.Core.Utilities
             GlobalDomains.Add(GlobalEquivalentDomainsType.Belkin, new List<string> { "belkin.com", "seedonk.com" });
             GlobalDomains.Add(GlobalEquivalentDomainsType.Turbotax, new List<string> { "turbotax.com", "intuit.com" });
             GlobalDomains.Add(GlobalEquivalentDomainsType.Shopify, new List<string> { "shopify.com", "myshopify.com" });
-            GlobalDomains.Add(GlobalEquivalentDomainsType.Ebay, new List<string> { "ebay.com", "ebay.de", "ebay.ca", "ebay.in", "ebay.co.uk", "ebay.com.au" });
+            GlobalDomains.Add(GlobalEquivalentDomainsType.Ebay, new List<string> { "ebay.com", "ebay.at", "ebay.be", "ebay.ca", "ebay.ch", "ebay.cn", "ebay.co.jp", "ebay.co.th", "ebay.co.uk", "ebay.com.au", "ebay.com.hk", "ebay.com.my", "ebay.com.sg", "ebay.com.tw", "ebay.de", "ebay.es", "ebay.fr", "ebay.ie", "ebay.in", "ebay.it", "ebay.nl", "ebay.ph", "ebay.pl" });
             GlobalDomains.Add(GlobalEquivalentDomainsType.Techdata, new List<string> { "techdata.com", "techdata.ch" });
             GlobalDomains.Add(GlobalEquivalentDomainsType.Schwab, new List<string> { "schwab.com", "schwabplan.com" });
             GlobalDomains.Add(GlobalEquivalentDomainsType.Tesla, new List<string> { "tesla.com", "teslamotors.com" });
             GlobalDomains.Add(GlobalEquivalentDomainsType.MorganStanley, new List<string> { "morganstanley.com", "morganstanleyclientserv.com", "stockplanconnect.com", "ms.com" });
             GlobalDomains.Add(GlobalEquivalentDomainsType.TaxAct, new List<string> { "taxact.com", "taxactonline.com" });
-            GlobalDomains.Add(GlobalEquivalentDomainsType.Wikimedia, new List<string> { "mediawiki.org", "wikibooks.org", "wikidata.org", "wikimedia.org", "wikinews.org", "wikipedia.org", "wikiquote.org", "wikisource.org", "wikiversity.org", "wikivoyage.org", "wiktionary.org", });
+            GlobalDomains.Add(GlobalEquivalentDomainsType.Wikimedia, new List<string> { "mediawiki.org", "wikibooks.org", "wikidata.org", "wikimedia.org", "wikinews.org", "wikipedia.org", "wikiquote.org", "wikisource.org", "wikiversity.org", "wikivoyage.org", "wiktionary.org" });
             GlobalDomains.Add(GlobalEquivalentDomainsType.Airbnb, new List<string> { "airbnb.at", "airbnb.be", "airbnb.ca", "airbnb.ch", "airbnb.cl", "airbnb.co.cr", "airbnb.co.id", "airbnb.co.in", "airbnb.co.kr", "airbnb.co.nz", "airbnb.co.uk", "airbnb.co.ve", "airbnb.com", "airbnb.com.ar", "airbnb.com.au", "airbnb.com.bo", "airbnb.com.br", "airbnb.com.bz", "airbnb.com.co", "airbnb.com.ec", "airbnb.com.gt", "airbnb.com.hk", "airbnb.com.hn", "airbnb.com.mt", "airbnb.com.my", "airbnb.com.ni", "airbnb.com.pa", "airbnb.com.pe", "airbnb.com.py", "airbnb.com.sg", "airbnb.com.sv", "airbnb.com.tr", "airbnb.com.tw", "airbnb.cz", "airbnb.de", "airbnb.dk", "airbnb.es", "airbnb.fi", "airbnb.fr", "airbnb.gr", "airbnb.gy", "airbnb.hu", "airbnb.ie", "airbnb.is", "airbnb.it", "airbnb.jp", "airbnb.mx", "airbnb.nl", "airbnb.no", "airbnb.pl", "airbnb.pt", "airbnb.ru", "airbnb.se" });
-            GlobalDomains.Add(GlobalEquivalentDomainsType.Eventbrite, new List<string> { "eventbrite.at", "eventbrite.be", "eventbrite.ca", "eventbrite.ch", "eventbrite.cl", "eventbrite.co.id", "eventbrite.co.in", "eventbrite.co.kr", "eventbrite.co.nz", "eventbrite.co.uk", "eventbrite.co.ve", "eventbrite.com", "eventbrite.com.au", "eventbrite.com.bo", "eventbrite.com.br", "eventbrite.com.co", "eventbrite.com.hk", "eventbrite.com.hn", "eventbrite.com.pe", "eventbrite.com.sg", "eventbrite.com.tr", "eventbrite.com.tw", "eventbrite.cz", "eventbrite.de", "eventbrite.dk", "eventbrite.fi", "eventbrite.fr", "eventbrite.gy", "eventbrite.hu", "eventbrite.ie", "eventbrite.is", "eventbrite.it", "eventbrite.jp", "eventbrite.mx", "eventbrite.nl", "eventbrite.no", "eventbrite.pl", "eventbrite.pt", "eventbrite.ru", "eventbrite.se" });
+            GlobalDomains.Add(GlobalEquivalentDomainsType.Eventbrite, new List<string> { "eventbrite.at", "eventbrite.be", "eventbrite.ca", "eventbrite.ch", "eventbrite.cl", "eventbrite.co", "eventbrite.co.nz", "eventbrite.co.uk", "eventbrite.com", "eventbrite.com.ar", "eventbrite.com.au", "eventbrite.com.br", "eventbrite.com.mx", "eventbrite.com.pe", "eventbrite.de", "eventbrite.dk", "eventbrite.es", "eventbrite.fi", "eventbrite.fr", "eventbrite.hk", "eventbrite.ie", "eventbrite.it", "eventbrite.nl", "eventbrite.pt", "eventbrite.se", "eventbrite.sg" });
             GlobalDomains.Add(GlobalEquivalentDomainsType.StackExchange, new List<string> { "stackexchange.com", "superuser.com", "stackoverflow.com", "serverfault.com", "mathoverflow.net", "askubuntu.com" });
-
+            GlobalDomains.Add(GlobalEquivalentDomainsType.Docusign, new List<string> { "docusign.com", "docusign.net" });
+            GlobalDomains.Add(GlobalEquivalentDomainsType.Envato, new List<string> { "envato.com", "themeforest.net", "codecanyon.net", "videohive.net", "audiojungle.net", "graphicriver.net", "photodune.net", "3docean.net" });
+            GlobalDomains.Add(GlobalEquivalentDomainsType.X10Hosting, new List<string> { "x10hosting.com", "x10premium.com" });
+            GlobalDomains.Add(GlobalEquivalentDomainsType.Cisco, new List<string> { "dnsomatic.com", "opendns.com", "umbrella.com" });
+            GlobalDomains.Add(GlobalEquivalentDomainsType.CedarFair, new List<string> { "cagreatamerica.com", "canadaswonderland.com", "carowinds.com", "cedarfair.com", "cedarpoint.com", "dorneypark.com", "kingsdominion.com", "knotts.com", "miadventure.com", "schlitterbahn.com", "valleyfair.com", "visitkingsisland.com", "worldsoffun.com" });
+            GlobalDomains.Add(GlobalEquivalentDomainsType.Ubiquiti, new List<string> { "ubnt.com", "ui.com" });
+            GlobalDomains.Add(GlobalEquivalentDomainsType.Discord, new List<string> { "discordapp.com", "discord.com" });
+            GlobalDomains.Add(GlobalEquivalentDomainsType.Netcup, new List<string> { "netcup.de", "netcup.eu", "customercontrolpanel.de" });
+            GlobalDomains.Add(GlobalEquivalentDomainsType.Yandex, new List<string> { "yandex.com", "ya.ru", "yandex.az", "yandex.by", "yandex.co.il", "yandex.com.am", "yandex.com.ge", "yandex.com.tr", "yandex.ee", "yandex.fi", "yandex.fr", "yandex.kg", "yandex.kz", "yandex.lt", "yandex.lv", "yandex.md", "yandex.pl", "yandex.ru", "yandex.tj", "yandex.tm", "yandex.ua", "yandex.uz" });
             #endregion
 
             #region Plans
@@ -96,109 +104,342 @@ namespace Bit.Core.Utilities
                 new Plan
                 {
                     Type = PlanType.Free,
-                    BaseSeats = 2,
-                    CanBuyAdditionalSeats = false,
-                    MaxCollections = 2,
+                    Product = ProductType.Free,
                     Name = "Free",
-                    UpgradeSortOrder = -1 // Always the lowest plan, cannot be upgraded to
+                    NameLocalizationKey = "planNameFree",
+                    DescriptionLocalizationKey = "planDescFree",
+                    BaseSeats = 2,
+                    MaxCollections = 2,
+                    MaxUsers = 2,
+
+                    UpgradeSortOrder = -1, // Always the lowest plan, cannot be upgraded to
+                    DisplaySortOrder = -1
+                },
+                new Plan
+                {
+                    Type = PlanType.FamiliesAnnually2019,
+                    Product = ProductType.Families,
+                    Name = "Families 2019",
+                    IsAnnual = true,
+                    NameLocalizationKey = "planNameFamilies",
+                    DescriptionLocalizationKey = "planDescFamilies",
+                    BaseSeats = 5,
+                    BaseStorageGb = 1,
+                    MaxUsers = 5,
+
+                    HasAdditionalStorageOption = true,
+                    HasPremiumAccessOption = true,
+                    TrialPeriodDays = 7,
+
+                    HasSelfHost = true,
+                    HasTotp = true,
+
+                    UpgradeSortOrder = 1,
+                    DisplaySortOrder = 1,
+                    LegacyYear = 2020,
+
+                    StripePlanId = "personal-org-annually",
+                    StripeStoragePlanId = "storage-gb-annually",
+                    StripePremiumAccessPlanId = "personal-org-premium-access-annually",
+                    BasePrice = 12,
+                    AdditionalStoragePricePerGb = 4,
+                    PremiumAccessOptionPrice = 40
+                },
+                new Plan
+                {
+                    Type = PlanType.TeamsAnnually2019,
+                    Product = ProductType.Teams,
+                    Name = "Teams (Annually) 2019",
+                    IsAnnual = true,
+                    NameLocalizationKey = "planNameTeams",
+                    DescriptionLocalizationKey = "planDescTeams",
+                    CanBeUsedByBusiness = true,
+                    BaseSeats = 5,
+                    BaseStorageGb = 1,
+
+                    HasAdditionalSeatsOption = true,
+                    HasAdditionalStorageOption = true,
+                    TrialPeriodDays = 7,
+
+                    HasTotp = true,
+
+                    UpgradeSortOrder = 2,
+                    DisplaySortOrder = 2,
+                    LegacyYear = 2020,
+
+                    StripePlanId = "teams-org-annually",
+                    StripeSeatPlanId = "teams-org-seat-annually",
+                    StripeStoragePlanId = "storage-gb-annually",
+                    BasePrice = 60,
+                    SeatPrice = 24,
+                    AdditionalStoragePricePerGb = 4
+                },
+                new Plan
+                {
+                    Type = PlanType.TeamsMonthly2019,
+                    Product = ProductType.Teams,
+                    Name = "Teams (Monthly) 2019",
+                    NameLocalizationKey = "planNameTeams",
+                    DescriptionLocalizationKey = "planDescTeams",
+                    CanBeUsedByBusiness = true,
+                    BaseSeats = 5,
+                    BaseStorageGb = 1,
+
+                    HasAdditionalSeatsOption = true,
+                    HasAdditionalStorageOption = true,
+                    TrialPeriodDays = 7,
+
+                    HasTotp = true,
+
+                    UpgradeSortOrder = 2,
+                    DisplaySortOrder = 2,
+                    LegacyYear = 2020,
+
+                    StripePlanId = "teams-org-monthly",
+                    StripeSeatPlanId = "teams-org-seat-monthly",
+                    StripeStoragePlanId = "storage-gb-monthly",
+                    BasePrice = 8,
+                    SeatPrice = 2.5M,
+                    AdditionalStoragePricePerGb = 0.5M
+                },
+                new Plan
+                {
+                    Type = PlanType.EnterpriseAnnually2019,
+                    Name = "Enterprise (Annually) 2019",
+                    IsAnnual = true,
+                    Product = ProductType.Enterprise,
+                    NameLocalizationKey = "planNameEnterprise",
+                    DescriptionLocalizationKey = "planDescEnterprise",
+                    CanBeUsedByBusiness = true,
+                    BaseSeats = 0,
+                    BaseStorageGb = 1,
+
+                    HasAdditionalSeatsOption = true,
+                    HasAdditionalStorageOption = true,
+                    TrialPeriodDays = 7,
+
+                    HasPolicies = true,
+                    HasSelfHost = true,
+                    HasGroups = true,
+                    HasDirectory = true,
+                    HasEvents = true,
+                    HasTotp = true,
+                    Has2fa = true,
+                    HasApi = true,
+                    UsersGetPremium = true,
+
+                    UpgradeSortOrder = 3,
+                    DisplaySortOrder = 3,
+                    LegacyYear = 2020,
+
+                    StripePlanId = null,
+                    StripeSeatPlanId = "enterprise-org-seat-annually",
+                    StripeStoragePlanId = "storage-gb-annually",
+                    BasePrice = 0,
+                    SeatPrice = 36,
+                    AdditionalStoragePricePerGb = 4
+                },
+                new Plan
+                {
+                    Type = PlanType.EnterpriseMonthly2019,
+                    Product = ProductType.Enterprise,
+                    Name = "Enterprise (Monthly) 2019",
+                    NameLocalizationKey = "planNameEnterprise",
+                    DescriptionLocalizationKey = "planDescEnterprise",
+                    CanBeUsedByBusiness = true,
+                    BaseSeats = 0,
+                    BaseStorageGb = 1,
+
+                    HasAdditionalSeatsOption = true,
+                    HasAdditionalStorageOption = true,
+                    TrialPeriodDays = 7,
+
+                    HasPolicies = true,
+                    HasGroups = true,
+                    HasDirectory = true,
+                    HasEvents = true,
+                    HasTotp = true,
+                    Has2fa = true,
+                    HasApi = true,
+                    HasSelfHost = true,
+                    UsersGetPremium = true,
+
+                    UpgradeSortOrder = 3,
+                    DisplaySortOrder = 3,
+                    LegacyYear = 2020,
+
+                    StripePlanId = null,
+                    StripeSeatPlanId = "enterprise-org-seat-monthly",
+                    StripeStoragePlanId = "storage-gb-monthly",
+                    BasePrice = 0,
+                    SeatPrice = 4M,
+                    AdditionalStoragePricePerGb = 0.5M
                 },
                 new Plan
                 {
                     Type = PlanType.FamiliesAnnually,
-                    BaseSeats = 5,
-                    BasePrice = 12,
-                    CanBuyAdditionalSeats = false,
-                    CanBuyPremiumAccessAddon = true,
+                    Product = ProductType.Families,
                     Name = "Families",
-                    StripePlanId = "personal-org-annually",
-                    StripeStoragePlanId = "storage-gb-annually",
-                    StripePremiumAccessPlanId = "personal-org-premium-access-annually",
+                    IsAnnual = true,
+                    NameLocalizationKey = "planNameFamilies",
+                    DescriptionLocalizationKey = "planDescFamilies",
+                    BaseSeats = 6,
+                    BaseStorageGb = 1,
+                    MaxUsers = 6,
+
+                    HasAdditionalStorageOption = true,
+                    TrialPeriodDays = 7,
+
+                    HasSelfHost = true,
+                    HasTotp = true,
+                    UsersGetPremium = true,
+
                     UpgradeSortOrder = 1,
-                    TrialPeriodDays = 7,
-                    UseTotp = true,
-                    MaxStorageGb = 1,
-                    SelfHost = true
-                },
-                new Plan
-                {
-                    Type = PlanType.TeamsMonthly,
-                    BaseSeats = 5,
-                    BasePrice = 8,
-                    SeatPrice = 2.5M,
-                    CanBuyAdditionalSeats = true,
-                    Name = "Teams (Monthly)",
-                    StripePlanId = "teams-org-monthly",
-                    StripeSeatPlanId = "teams-org-seat-monthly",
-                    StripeStoragePlanId = "storage-gb-monthly",
-                    UpgradeSortOrder = 2,
-                    TrialPeriodDays = 7,
-                    UseTotp = true,
-                    MaxStorageGb = 1
+                    DisplaySortOrder = 1,
+
+                    StripePlanId = "2020-families-org-annually",
+                    StripeStoragePlanId = "storage-gb-annually",
+                    BasePrice = 40,
+                    AdditionalStoragePricePerGb = 4
                 },
                 new Plan
                 {
                     Type = PlanType.TeamsAnnually,
-                    BaseSeats = 5,
-                    BasePrice = 60,
-                    SeatPrice = 24,
-                    CanBuyAdditionalSeats = true,
+                    Product = ProductType.Teams,
                     Name = "Teams (Annually)",
-                    StripePlanId = "teams-org-annually",
-                    StripeSeatPlanId = "teams-org-seat-annually",
-                    StripeStoragePlanId = "storage-gb-annually",
-                    UpgradeSortOrder = 2,
+                    IsAnnual = true,
+                    NameLocalizationKey = "planNameTeams",
+                    DescriptionLocalizationKey = "planDescTeams",
+                    CanBeUsedByBusiness = true,
+                    BaseStorageGb = 1,
+                    BaseSeats = 0,
+
+                    HasAdditionalSeatsOption = true,
+                    HasAdditionalStorageOption = true,
                     TrialPeriodDays = 7,
-                    UseTotp = true,
-                    MaxStorageGb = 1
+
+                    Has2fa = true,
+                    HasApi = true,
+                    HasDirectory = true,
+                    HasEvents = true,
+                    HasGroups = true,
+                    HasTotp = true,
+                    UsersGetPremium = true,
+
+                    UpgradeSortOrder = 2,
+                    DisplaySortOrder = 2,
+
+                    StripeSeatPlanId = "2020-teams-org-seat-annually",
+                    StripeStoragePlanId = "storage-gb-annually",
+                    SeatPrice = 36,
+                    AdditionalStoragePricePerGb = 4
                 },
                 new Plan
                 {
-                    Type = PlanType.EnterpriseMonthly,
+                    Type = PlanType.TeamsMonthly,
+                    Product = ProductType.Teams,
+                    Name = "Teams (Monthly)",
+                    NameLocalizationKey = "planNameTeams",
+                    DescriptionLocalizationKey = "planDescTeams",
+                    CanBeUsedByBusiness = true,
+                    BaseStorageGb = 1,
                     BaseSeats = 0,
-                    BasePrice = 0,
-                    SeatPrice = 4M,
-                    CanBuyAdditionalSeats = true,
-                    Name = "Enterprise (Monthly)",
-                    StripePlanId = null,
-                    StripeSeatPlanId = "enterprise-org-seat-monthly",
-                    StripeStoragePlanId = "storage-gb-monthly",
-                    UpgradeSortOrder = 3,
+
+                    HasAdditionalSeatsOption = true,
+                    HasAdditionalStorageOption = true,
                     TrialPeriodDays = 7,
-                    UsePolicies = true,
-                    UseGroups = true,
-                    UseDirectory = true,
-                    UseEvents = true,
-                    UseTotp = true,
-                    Use2fa = true,
-                    UseApi = true,
-                    MaxStorageGb = 1,
-                    SelfHost = true,
-                    UsersGetPremium = true
+
+                    Has2fa = true,
+                    HasApi = true,
+                    HasDirectory = true,
+                    HasEvents = true,
+                    HasGroups = true,
+                    HasTotp = true,
+                    UsersGetPremium = true,
+
+                    UpgradeSortOrder = 2,
+                    DisplaySortOrder = 2,
+
+                    StripeSeatPlanId = "2020-teams-org-seat-monthly",
+                    StripeStoragePlanId = "storage-gb-monthly",
+                    SeatPrice = 4,
+                    AdditionalStoragePricePerGb = 0.5M
                 },
                 new Plan
                 {
                     Type = PlanType.EnterpriseAnnually,
-                    BaseSeats = 0,
-                    BasePrice = 0,
-                    SeatPrice = 36,
-                    CanBuyAdditionalSeats = true,
                     Name = "Enterprise (Annually)",
-                    StripePlanId = null,
-                    StripeSeatPlanId = "enterprise-org-seat-annually",
-                    StripeStoragePlanId = "storage-gb-annually",
-                    UpgradeSortOrder = 3,
+                    Product = ProductType.Enterprise,
+                    IsAnnual = true,
+                    NameLocalizationKey = "planNameEnterprise",
+                    DescriptionLocalizationKey = "planDescEnterprise",
+                    CanBeUsedByBusiness = true,
+                    BaseSeats = 0,
+                    BaseStorageGb = 1,
+
+                    HasAdditionalSeatsOption = true,
+                    HasAdditionalStorageOption = true,
                     TrialPeriodDays = 7,
-                    UsePolicies = true,
-                    UseGroups = true,
-                    UseDirectory = true,
-                    UseEvents = true,
-                    UseTotp = true,
-                    Use2fa = true,
-                    UseApi = true,
-                    MaxStorageGb = 1,
-                    SelfHost = true,
-                    UsersGetPremium = true
-                }
+
+                    HasPolicies = true,
+                    HasSelfHost = true,
+                    HasGroups = true,
+                    HasDirectory = true,
+                    HasEvents = true,
+                    HasTotp = true,
+                    Has2fa = true,
+                    HasApi = true,
+                    HasSso = true,
+                    UsersGetPremium = true,
+
+                    UpgradeSortOrder = 3,
+                    DisplaySortOrder = 3,
+
+                    StripeSeatPlanId = "2020-enterprise-org-seat-annually",
+                    StripeStoragePlanId = "storage-gb-annually",
+                    BasePrice = 0,
+                    SeatPrice = 60,
+                    AdditionalStoragePricePerGb = 4
+                },
+                new Plan
+                {
+                    Type = PlanType.EnterpriseMonthly,
+                    Product = ProductType.Enterprise,
+                    Name = "Enterprise (Monthly)",
+                    NameLocalizationKey = "planNameEnterprise",
+                    DescriptionLocalizationKey = "planDescEnterprise",
+                    CanBeUsedByBusiness = true,
+                    BaseSeats = 0,
+                    BaseStorageGb = 1,
+
+                    HasAdditionalSeatsOption = true,
+                    HasAdditionalStorageOption = true,
+                    TrialPeriodDays = 7,
+
+                    HasPolicies = true,
+                    HasGroups = true,
+                    HasDirectory = true,
+                    HasEvents = true,
+                    HasTotp = true,
+                    Has2fa = true,
+                    HasApi = true,
+                    HasSelfHost = true,
+                    HasSso = true,
+                    UsersGetPremium = true,
+
+                    UpgradeSortOrder = 3,
+                    DisplaySortOrder = 3,
+
+                    StripeSeatPlanId = "2020-enterprise-org-seat-monthly",
+                    StripeStoragePlanId = "storage-gb-monthly",
+                    BasePrice = 0,
+                    SeatPrice = 6,
+                    AdditionalStoragePricePerGb = 0.5M
+                },
+                new Plan
+                {
+                    Type = PlanType.Custom
+                },
             };
 
             #endregion

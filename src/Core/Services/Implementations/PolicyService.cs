@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using Bit.Core.Enums;
 using Bit.Core.Exceptions;
 using Bit.Core.Models.Table;
 using Bit.Core.Repositories;
@@ -12,50 +15,108 @@ namespace Bit.Core.Services
         private readonly IOrganizationRepository _organizationRepository;
         private readonly IOrganizationUserRepository _organizationUserRepository;
         private readonly IPolicyRepository _policyRepository;
+        private readonly IMailService _mailService;
 
         public PolicyService(
             IEventService eventService,
             IOrganizationRepository organizationRepository,
             IOrganizationUserRepository organizationUserRepository,
-            IPolicyRepository policyRepository)
+            IPolicyRepository policyRepository,
+            IMailService mailService)
         {
             _eventService = eventService;
             _organizationRepository = organizationRepository;
             _organizationUserRepository = organizationUserRepository;
             _policyRepository = policyRepository;
+            _mailService = mailService;
         }
 
-        public async Task SaveAsync(Policy policy)
+        public async Task SaveAsync(Policy policy, IUserService userService, IOrganizationService organizationService,
+            Guid? savingUserId)
         {
             var org = await _organizationRepository.GetByIdAsync(policy.OrganizationId);
-            if(org == null)
+            if (org == null)
             {
                 throw new BadRequestException("Organization not found");
             }
 
-            if(!org.UsePolicies)
+            if (!org.UsePolicies)
             {
                 throw new BadRequestException("This organization cannot use policies.");
             }
-
-            if(policy.Id == default(Guid))
+            
+            // Handle dependent policy checks
+            switch(policy.Type)
             {
-                policy.CreationDate = policy.RevisionDate = DateTime.UtcNow;
-                await _policyRepository.CreateAsync(policy);
-                await _eventService.LogPolicyEventAsync(policy, Enums.EventType.Policy_Created);
+               case PolicyType.RequireSso:
+                   if (policy.Enabled)
+                   {
+                       var singleOrg = await _policyRepository.GetByOrganizationIdTypeAsync(org.Id, PolicyType.SingleOrg);
+                       if (singleOrg?.Enabled != true)
+                       {
+                           throw new BadRequestException("Single Organization policy not enabled.");
+                       }
+                   }
+                   break;
+                   
+                default:
+                    break;
             }
-            else
-            {
-                policy.RevisionDate = DateTime.UtcNow;
-                await _policyRepository.ReplaceAsync(policy);
-                await _eventService.LogPolicyEventAsync(policy, Enums.EventType.Policy_Updated);
-            }
-        }
 
-        public async Task DeleteAsync(Policy policy)
-        {
-            await _policyRepository.DeleteAsync(policy);
-            await _eventService.LogPolicyEventAsync(policy, Enums.EventType.Policy_Deleted);
+            var now = DateTime.UtcNow;
+            if (policy.Id == default(Guid))
+            {
+                policy.CreationDate = now;
+            }
+            else if (policy.Enabled)
+            {
+                var currentPolicy = await _policyRepository.GetByIdAsync(policy.Id);
+                if (!currentPolicy?.Enabled ?? true)
+                {
+                    Organization organization = null;
+                    var orgUsers = await _organizationUserRepository.GetManyDetailsByOrganizationAsync(
+                        policy.OrganizationId);
+                    var removableOrgUsers = orgUsers.Where(ou =>
+                        ou.Status != Enums.OrganizationUserStatusType.Invited &&
+                        ou.Type != Enums.OrganizationUserType.Owner && ou.UserId != savingUserId);
+                    switch (currentPolicy.Type)
+                    {
+                        case Enums.PolicyType.TwoFactorAuthentication:
+                            foreach (var orgUser in removableOrgUsers)
+                            {
+                                if (!await userService.TwoFactorIsEnabledAsync(orgUser))
+                                {
+                                    organization = organization ?? await _organizationRepository.GetByIdAsync(policy.OrganizationId);
+                                    await organizationService.DeleteUserAsync(policy.OrganizationId, orgUser.Id,
+                                        savingUserId);
+                                    await _mailService.SendOrganizationUserRemovedForPolicyTwoStepEmailAsync(
+                                        organization.Name, orgUser.Email);
+                                }
+                            }
+                        break;
+                        case Enums.PolicyType.SingleOrg:
+                            var userOrgs = await _organizationUserRepository.GetManyByManyUsersAsync(
+                                    removableOrgUsers.Select(ou => ou.UserId.Value));
+                            foreach (var orgUser in removableOrgUsers)
+                            {
+                                if (userOrgs.Any(ou => ou.UserId == orgUser.UserId && ou.Status != OrganizationUserStatusType.Invited))
+                                {
+                                    organization = organization ?? await _organizationRepository.GetByIdAsync(policy.OrganizationId);
+                                    await organizationService.DeleteUserAsync(policy.OrganizationId, orgUser.Id,
+                                        savingUserId);
+                                    await _mailService.SendOrganizationUserRemovedForPolicySingleOrgEmailAsync(
+                                        organization.Name, orgUser.Email);
+                                }
+                            }
+                        break;
+                        default:
+                        break;
+                    }
+                }
+            }
+            policy.RevisionDate = DateTime.UtcNow;
+            await _policyRepository.UpsertAsync(policy);
+            await _eventService.LogPolicyEventAsync(policy, Enums.EventType.Policy_Updated);
         }
     }
 }

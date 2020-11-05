@@ -6,6 +6,8 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Primitives;
+using Bit.Core.Models.Api;
+using Newtonsoft.Json;
 
 namespace Bit.Api.Utilities
 {
@@ -20,36 +22,36 @@ namespace Bit.Api.Utilities
             var reader = new MultipartReader(boundary, request.Body);
 
             var firstSection = await reader.ReadNextSectionAsync();
-            if(firstSection != null)
+            if (firstSection != null)
             {
-                if(ContentDispositionHeaderValue.TryParse(firstSection.ContentDisposition, out var firstContent))
+                if (ContentDispositionHeaderValue.TryParse(firstSection.ContentDisposition, out var firstContent))
                 {
-                    if(HasFileContentDisposition(firstContent))
+                    if (HasFileContentDisposition(firstContent))
                     {
                         // Old style with just data
                         var fileName = HeaderUtilities.RemoveQuotes(firstContent.FileName).ToString();
-                        using(firstSection.Body)
+                        using (firstSection.Body)
                         {
                             await callback(firstSection.Body, fileName, null);
                         }
                     }
-                    else if(HasKeyDisposition(firstContent))
+                    else if (HasDispositionName(firstContent, "key"))
                     {
                         // New style with key, then data
                         string key = null;
-                        using(var sr = new StreamReader(firstSection.Body))
+                        using (var sr = new StreamReader(firstSection.Body))
                         {
                             key = await sr.ReadToEndAsync();
                         }
 
                         var secondSection = await reader.ReadNextSectionAsync();
-                        if(secondSection != null)
+                        if (secondSection != null)
                         {
-                            if(ContentDispositionHeaderValue.TryParse(secondSection.ContentDisposition,
+                            if (ContentDispositionHeaderValue.TryParse(secondSection.ContentDisposition,
                                 out var secondContent) && HasFileContentDisposition(secondContent))
                             {
                                 var fileName = HeaderUtilities.RemoveQuotes(secondContent.FileName).ToString();
-                                using(secondSection.Body)
+                                using (secondSection.Body)
                                 {
                                     await callback(secondSection.Body, fileName, key);
                                 }
@@ -64,15 +66,58 @@ namespace Bit.Api.Utilities
             }
         }
 
+        public static async Task GetSendFileAsync(this HttpRequest request, Func<Stream, string,
+            SendRequestModel, Task> callback)
+        {
+            var boundary = GetBoundary(MediaTypeHeaderValue.Parse(request.ContentType),
+                _defaultFormOptions.MultipartBoundaryLengthLimit);
+            var reader = new MultipartReader(boundary, request.Body);
+
+            var firstSection = await reader.ReadNextSectionAsync();
+            if (firstSection != null)
+            {
+                if (ContentDispositionHeaderValue.TryParse(firstSection.ContentDisposition, out _))
+                {
+                    // Request model json, then data
+                    string requestModelJson = null;
+                    using (var sr = new StreamReader(firstSection.Body))
+                    {
+                        requestModelJson = await sr.ReadToEndAsync();
+                    }
+
+                    var secondSection = await reader.ReadNextSectionAsync();
+                    if (secondSection != null)
+                    {
+                        if (ContentDispositionHeaderValue.TryParse(secondSection.ContentDisposition,
+                            out var secondContent) && HasFileContentDisposition(secondContent))
+                        {
+                            var fileName = HeaderUtilities.RemoveQuotes(secondContent.FileName).ToString();
+                            using (secondSection.Body)
+                            {
+                                var model = JsonConvert.DeserializeObject<SendRequestModel>(requestModelJson);
+                                await callback(secondSection.Body, fileName, model);
+                            }
+                        }
+
+                        secondSection = null;
+                    }
+
+                }
+
+                firstSection = null;
+            }
+        }
+
+
         private static string GetBoundary(MediaTypeHeaderValue contentType, int lengthLimit)
         {
             var boundary = HeaderUtilities.RemoveQuotes(contentType.Boundary);
-            if(StringSegment.IsNullOrEmpty(boundary))
+            if (StringSegment.IsNullOrEmpty(boundary))
             {
                 throw new InvalidDataException("Missing content-type boundary.");
             }
 
-            if(boundary.Length > lengthLimit)
+            if (boundary.Length > lengthLimit)
             {
                 throw new InvalidDataException($"Multipart boundary length limit {lengthLimit} exceeded.");
             }
@@ -87,10 +132,10 @@ namespace Bit.Api.Utilities
                 (!StringSegment.IsNullOrEmpty(content.FileName) || !StringSegment.IsNullOrEmpty(content.FileNameStar));
         }
 
-        private static bool HasKeyDisposition(ContentDispositionHeaderValue content)
+        private static bool HasDispositionName(ContentDispositionHeaderValue content, string name)
         {
             // Content-Disposition: form-data; name="key";
-            return content != null && content.DispositionType.Equals("form-data") && content.Name == "key";
+            return content != null && content.DispositionType.Equals("form-data") && content.Name == name;
         }
     }
 }

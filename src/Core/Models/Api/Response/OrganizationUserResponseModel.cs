@@ -12,7 +12,7 @@ namespace Bit.Core.Models.Api
         public OrganizationUserResponseModel(OrganizationUser organizationUser, string obj = "organizationUser")
             : base(obj)
         {
-            if(organizationUser == null)
+            if (organizationUser == null)
             {
                 throw new ArgumentNullException(nameof(organizationUser));
             }
@@ -27,7 +27,7 @@ namespace Bit.Core.Models.Api
         public OrganizationUserResponseModel(OrganizationUserUserDetails organizationUser, string obj = "organizationUser")
             : base(obj)
         {
-            if(organizationUser == null)
+            if (organizationUser == null)
             {
                 throw new ArgumentNullException(nameof(organizationUser));
             }
@@ -64,7 +64,7 @@ namespace Bit.Core.Models.Api
             bool twoFactorEnabled, string obj = "organizationUserUserDetails")
             : base(organizationUser, obj)
         {
-            if(organizationUser == null)
+            if (organizationUser == null)
             {
                 throw new ArgumentNullException(nameof(organizationUser));
             }
@@ -72,10 +72,12 @@ namespace Bit.Core.Models.Api
             Name = organizationUser.Name;
             Email = organizationUser.Email;
             TwoFactorEnabled = twoFactorEnabled;
+            SsoBound = !string.IsNullOrWhiteSpace(organizationUser.SsoExternalId);
         }
 
         public string Name { get; set; }
         public string Email { get; set; }
         public bool TwoFactorEnabled { get; set; }
+        public bool SsoBound { get; set; }
     }
 }

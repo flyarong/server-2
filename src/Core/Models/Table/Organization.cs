@@ -7,11 +7,12 @@ using System.Linq;
 
 namespace Bit.Core.Models.Table
 {
-    public class Organization : ITableObject<Guid>, ISubscriber, IStorable, IStorableSubscriber, IRevisable
+    public class Organization : ITableObject<Guid>, ISubscriber, IStorable, IStorableSubscriber, IRevisable, IReferenceable
     {
         private Dictionary<TwoFactorProviderType, TwoFactorProvider> _twoFactorProviders;
 
         public Guid Id { get; set; }
+        public string Identifier { get; set; }
         public string Name { get; set; }
         public string BusinessName { get; set; }
         public string BusinessAddress1 { get; set; }
@@ -25,6 +26,7 @@ namespace Bit.Core.Models.Table
         public short? Seats { get; set; }
         public short? MaxCollections { get; set; }
         public bool UsePolicies { get; set; }
+        public bool UseSso { get; set; }
         public bool UseGroups { get; set; }
         public bool UseDirectory { get; set; }
         public bool UseEvents { get; set; }
@@ -38,6 +40,7 @@ namespace Bit.Core.Models.Table
         public GatewayType? Gateway { get; set; }
         public string GatewayCustomerId { get; set; }
         public string GatewaySubscriptionId { get; set; }
+        public string ReferenceData { get; set; }
         public bool Enabled { get; set; } = true;
         public string LicenseKey { get; set; }
         public string ApiKey { get; set; }
@@ -48,7 +51,7 @@ namespace Bit.Core.Models.Table
 
         public void SetNewId()
         {
-            if(Id == default(Guid))
+            if (Id == default(Guid))
             {
                 Id = CoreHelpers.GenerateComb();
             }
@@ -86,7 +89,7 @@ namespace Bit.Core.Models.Table
 
         public long StorageBytesRemaining()
         {
-            if(!MaxStorageGb.HasValue)
+            if (!MaxStorageGb.HasValue)
             {
                 return 0;
             }
@@ -97,7 +100,7 @@ namespace Bit.Core.Models.Table
         public long StorageBytesRemaining(short maxStorageGb)
         {
             var maxStorageBytes = maxStorageGb * 1073741824L;
-            if(!Storage.HasValue)
+            if (!Storage.HasValue)
             {
                 return maxStorageBytes;
             }
@@ -107,14 +110,14 @@ namespace Bit.Core.Models.Table
 
         public Dictionary<TwoFactorProviderType, TwoFactorProvider> GetTwoFactorProviders()
         {
-            if(string.IsNullOrWhiteSpace(TwoFactorProviders))
+            if (string.IsNullOrWhiteSpace(TwoFactorProviders))
             {
                 return null;
             }
 
             try
             {
-                if(_twoFactorProviders == null)
+                if (_twoFactorProviders == null)
                 {
                     _twoFactorProviders =
                         JsonConvert.DeserializeObject<Dictionary<TwoFactorProviderType, TwoFactorProvider>>(
@@ -123,7 +126,7 @@ namespace Bit.Core.Models.Table
 
                 return _twoFactorProviders;
             }
-            catch(JsonSerializationException)
+            catch (JsonSerializationException)
             {
                 return null;
             }
@@ -131,7 +134,7 @@ namespace Bit.Core.Models.Table
 
         public void SetTwoFactorProviders(Dictionary<TwoFactorProviderType, TwoFactorProvider> providers)
         {
-            if(!providers.Any())
+            if (!providers.Any())
             {
                 TwoFactorProviders = null;
                 _twoFactorProviders = null;
@@ -148,7 +151,7 @@ namespace Bit.Core.Models.Table
         public bool TwoFactorProviderIsEnabled(TwoFactorProviderType provider)
         {
             var providers = GetTwoFactorProviders();
-            if(providers == null || !providers.ContainsKey(provider))
+            if (providers == null || !providers.ContainsKey(provider))
             {
                 return false;
             }
@@ -159,7 +162,7 @@ namespace Bit.Core.Models.Table
         public bool TwoFactorIsEnabled()
         {
             var providers = GetTwoFactorProviders();
-            if(providers == null)
+            if (providers == null)
             {
                 return false;
             }
@@ -170,7 +173,7 @@ namespace Bit.Core.Models.Table
         public TwoFactorProvider GetTwoFactorProvider(TwoFactorProviderType provider)
         {
             var providers = GetTwoFactorProviders();
-            if(providers == null || !providers.ContainsKey(provider))
+            if (providers == null || !providers.ContainsKey(provider))
             {
                 return null;
             }

@@ -11,7 +11,7 @@ namespace Bit.Core.Models.Api
         public CollectionResponseModel(Collection collection, string obj = "collection")
             : base(obj)
         {
-            if(collection == null)
+            if (collection == null)
             {
                 throw new ArgumentNullException(nameof(collection));
             }
@@ -34,9 +34,11 @@ namespace Bit.Core.Models.Api
             : base(collectionDetails, "collectionDetails")
         {
             ReadOnly = collectionDetails.ReadOnly;
+            HidePasswords = collectionDetails.HidePasswords;
         }
 
         public bool ReadOnly { get; set; }
+        public bool HidePasswords { get; set; }
     }
 
     public class CollectionGroupDetailsResponseModel : CollectionResponseModel
